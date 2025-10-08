@@ -32,6 +32,7 @@ COPY config ./config
 COPY routes ./routes
 COPY database ./database
 COPY public ./public
+COPY bootstrap ./bootstrap 
 
 # Copia arquivos de definição de dependência
 COPY composer.json composer.lock ./
