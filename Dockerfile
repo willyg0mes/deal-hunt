@@ -68,6 +68,9 @@ COPY . .
 # Estágio 2: PRODUCTION (Ambiente de Execução Final)
 FROM php:8.2-fpm-alpine AS production
 
+RUN apk update && apk add --no-cache mariadb-client \
+    && docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
+
 # Instala apenas os pacotes essenciais
 RUN apk update && apk add --no-cache \
     nginx \
