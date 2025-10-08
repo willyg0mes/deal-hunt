@@ -29,18 +29,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Define o diretório de trabalho
 WORKDIR /var/www/html
 
-# Copia arquivos essenciais primeiro (para cache do Docker)
+# Copia arquivos de configuração
 COPY composer.json composer.lock ./
 COPY package.json package-lock.json ./
 
-# Cria diretórios necessários
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
-    && chmod -R 777 storage
-
-# Instala dependências PHP
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copia código fonte
+# Copia código fonte necessário para o autoload do Composer
 COPY artisan ./
 COPY app ./app
 COPY config ./config
@@ -50,6 +43,13 @@ COPY public ./public
 COPY bootstrap ./bootstrap
 COPY vite.config.js postcss.config.js tailwind.config.js ./
 COPY resources ./resources
+
+# Cria diretórios necessários
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
+    && chmod -R 777 storage
+
+# Agora pode instalar dependências PHP (com todos os arquivos necessários)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Instala dependências Node e compila assets
 RUN npm ci --no-audit
