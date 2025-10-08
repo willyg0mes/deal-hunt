@@ -106,7 +106,6 @@ CMD ["/bin/bash", "-c", "\
     php artisan migrate --force --no-interaction && \
     echo '🧹 Otimizando aplicação...' && \
     php artisan config:cache && \
-    php artisan route:cache && \
     php artisan view:cache && \
     echo '🚀 Iniciando servidores...' && \
     php-fpm -D && nginx -g 'daemon off;'"]

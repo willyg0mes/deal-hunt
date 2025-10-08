@@ -66,7 +66,7 @@ Route::middleware(['web'])->group(function () {
         })->name('logout');
 
         // Rota para atualizar a senha do usuário
-        Route::patch('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+        Route::patch('/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
         Route::post('/profile/2fa-enable', [TwoFactorAuthenticationController::class, 'store'])->name('two-factor.enable');
