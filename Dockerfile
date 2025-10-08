@@ -40,8 +40,8 @@ COPY package.json package-lock.json ./
 
 # 3. Instalação de Dependências
 # Instala Composer (PHP) - Agora o 'php artisan package:discover' encontrará o artisan!
-RUN mkdir -p storage bootstrap/cache \
-    && chmod -R 777 storage bootstrap/cache
+RUN mkdir -p storage bootstrap/cache storage/framework/cache storage/logs \
+    && chmod -R 777 storage bootstrap/cache storage/logs
 RUN composer install --no-dev --optimize-autoloader
 
 # Instala Node e Compila Assets (Frontend)
