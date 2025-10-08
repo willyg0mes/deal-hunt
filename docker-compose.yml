@@ -166,8 +166,8 @@ services:
     image: mysql:8.0
     container_name: deal-hunt-mysql
     restart: unless-stopped
-    ports:
-      - "${DB_PORT_EXTERNAL:-3307}:3306"
+    # ports:
+    #   - "${DB_PORT_EXTERNAL:-3307}:3306"  # Desabilitado - use apenas comunicação interna
     environment:
       - MYSQL_DATABASE=${DB_DATABASE:-deal_hunt}
       - MYSQL_USER=${DB_USERNAME:-deal_hunt_user}
@@ -192,8 +192,8 @@ services:
     image: redis:7-alpine
     container_name: deal-hunt-redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT_EXTERNAL:-6380}:6379"
+    # ports:
+    #   - "${REDIS_PORT_EXTERNAL:-6380}:6379"  # Desabilitado - use apenas comunicação interna
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-null}
     volumes:
       - redis-data:/data
