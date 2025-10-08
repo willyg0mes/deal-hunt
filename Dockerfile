@@ -89,8 +89,9 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Configuração do Nginx e PHP-FPM
-RUN rm -f /etc/nginx/conf.d/default.conf
-COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+# Remove todas as configurações padrão e usa a nossa
+RUN rm -rf /etc/nginx/conf.d/* /etc/nginx/http.d/*
+COPY docker/nginx-main.conf /etc/nginx/nginx.conf
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # Health check
