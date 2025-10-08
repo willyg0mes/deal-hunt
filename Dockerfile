@@ -57,7 +57,8 @@ RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framewor
 RUN composer install --no-dev --optimize-autoloader
 
 # Instala Node e Compila Assets (Frontend)
-RUN npm install && npm run build
+RUN npm install
+RUN npm run build
 
 # Copia os arquivos remanescentes
 COPY . .
