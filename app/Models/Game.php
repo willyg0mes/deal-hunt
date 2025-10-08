@@ -107,7 +107,10 @@ class Game extends Model
      */
     public function scopeNotExpired($query)
     {
-        return $query->where('deal_ends_at', '>', now());
+        return $query->where(function($q) {
+            $q->where('deal_ends_at', '>', now())
+              ->orWhereNull('deal_ends_at');
+        });
     }
 
     /**

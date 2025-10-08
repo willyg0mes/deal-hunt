@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('developer')->nullable()->after('store_name');
             $table->date('release_date')->nullable()->after('developer');
             $table->integer('metacritic')->nullable()->after('release_date');
-            $table->boolean('is_active')->default(true)->after('metacritic');
         });
     }
 
@@ -26,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('games', function (Blueprint $table) {
-            $table->dropColumn(['external_id', 'developer', 'release_date', 'metacritic', 'is_active']);
+            $table->dropColumn(['external_id', 'developer', 'release_date', 'metacritic']);
         });
     }
 };
