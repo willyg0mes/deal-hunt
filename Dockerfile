@@ -107,5 +107,9 @@ CMD ["/bin/bash", "-c", "\
     echo '🧹 Otimizando aplicação...' && \
     php artisan config:cache && \
     php artisan view:cache && \
-    echo '🚀 Iniciando servidores...' && \
-    php-fpm -D && nginx -g 'daemon off;'"]
+    echo '✅ Otimizações concluídas!' && \
+    echo '🚀 Iniciando PHP-FPM...' && \
+    php-fpm -D && \
+    echo '✅ PHP-FPM iniciado!' && \
+    echo '🌐 Iniciando Nginx...' && \
+    nginx -g 'daemon off;'"]
