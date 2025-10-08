@@ -1,18 +1,15 @@
 # Estágio 1: BUILD (Compilação e Instalação de Dependências)
 FROM php:8.2-fpm-alpine AS builder
 
-# NOVO: Argumentos de Build para injetar variáveis SECRETAS
-# O Coolify irá preencher estes ARGs automaticamente se forem definidos
+# Argumentos de Build para injetar variáveis SECRETAS
 ARG RAWG_API_KEY
 ARG APP_KEY
 
-# É uma boa prática definir um ENV a partir do ARG para o processo
 ENV RAWG_API_KEY=$RAWG_API_KEY
 ENV APP_KEY=$APP_KEY
 
-# 1. Instalação de Ferramentas e Extensões
+# Instala dependências de compilação e runtime
 RUN apk update && apk add --no-cache \
-    nginx \
     git \
     curl \
     libxml2-dev \
@@ -20,23 +17,30 @@ RUN apk update && apk add --no-cache \
     libjpeg-turbo-dev \
     mariadb-client \
     nodejs \
-    npm
-    
+    npm \
+    bash
+
+# Instala extensões PHP (apenas uma vez!)
 RUN docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
 
-# Instala extensões PHP
-RUN docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
-
-# Instala o Composer de forma global
+# Instala o Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Define o diretório de trabalho
 WORKDIR /var/www/html
 
-# 2. Cópia Otimizada (CORE APP e DEPENDÊNCIAS)
+# Copia arquivos essenciais primeiro (para cache do Docker)
+COPY composer.json composer.lock ./
+COPY package.json package-lock.json ./
 
-# CORREÇÃO CRÍTICA: Copie o arquivo ARTISAN e as pastas APP/CONFIG
-# Isso garante que 'php artisan' e o autoload de CurrencyHelper.php funcionem.
+# Cria diretórios necessários
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
+    && chmod -R 777 storage
+
+# Instala dependências PHP
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copia código fonte
 COPY artisan ./
 COPY app ./app
 COPY config ./config
@@ -44,71 +48,65 @@ COPY routes ./routes
 COPY database ./database
 COPY public ./public
 COPY bootstrap ./bootstrap
-COPY vite.config.js ./
+COPY vite.config.js postcss.config.js tailwind.config.js ./
 COPY resources ./resources
 
-# Copia arquivos de definição de dependência
-COPY composer.json composer.lock ./
-COPY package.json package-lock.json ./
-
-# 3. Instalação de Dependências
-# Instala Composer (PHP) - Agora o 'php artisan package:discover' encontrará o artisan!
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
-    && chmod -R 777 storage bootstrap/cache
-RUN composer install --no-dev --optimize-autoloader
-
-# Instala Node e Compila Assets (Frontend)
-RUN npm install
+# Instala dependências Node e compila assets
+RUN npm ci --no-audit
 RUN npm run build
 
-# Copia os arquivos remanescentes
+# Copia arquivos remanescentes
 COPY . .
+
+# Permissões finais
+RUN chmod -R 775 storage bootstrap/cache
 
 
 # Estágio 2: PRODUCTION (Ambiente de Execução Final)
 FROM php:8.2-fpm-alpine AS production
 
-# Instala dependências do sistema e extensões PHP
+# Instala apenas dependências de runtime (não precisa compilar extensões novamente!)
 RUN apk update && apk add --no-cache \
     nginx \
-    mariadb-client \
     bash \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    libxml2-dev \
-    && docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
+    mariadb-client \
+    libpng \
+    libjpeg-turbo \
+    libxml2
+
+# Copia extensões PHP já compiladas do builder
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 # Define o diretório de trabalho
 WORKDIR /var/www/html
 
-# Copia os arquivos finais do estágio BUILD
+# Copia aplicação completa do builder
 COPY --from=builder /var/www/html /var/www/html
 
-# 4. Permissões Críticas
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+# Permissões críticas
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 5. Configuração do Servidor
+# Configuração do Nginx e PHP-FPM
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
-# 6. Pós-Deploy e Start
-# Limpa cache, Roda migrações e Inicia Nginx/PHP-FPM
-CMD /bin/bash -c "php artisan config:clear; php artisan cache:clear; php artisan migrate --force --no-interaction; php-fpm -D & nginx -g 'daemon off;'"
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost/api/health || exit 1
 
-CMD /bin/bash -c " \
-    # 1. Rotina de espera: Tenta conectar ao DB na porta 3306 
-    # (Pode ser ajustado se a conexão for recusada, mas tentaremos o sleep primeiro)
-    sleep 10; \
-    
-    # 2. Executa a limpeza e migração (agora que o DB tem 10 segundos para iniciar)
-    php artisan config:clear; \
-    php artisan cache:clear; \
-    php artisan view:clear; \
-    php artisan migrate --force --no-interaction; \
-    
-    # 3. Inicia o servidor (agora está tudo pronto)
-    php-fpm -D & nginx -g 'daemon off;'"
-
-# O Nginx está escutando na porta 80
+# Porta exposta
 EXPOSE 80
+
+# Comando de inicialização
+CMD ["/bin/bash", "-c", "\
+    echo '⏳ Aguardando banco de dados...' && sleep 10 && \
+    echo '🧹 Limpando cache...' && \
+    php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan view:clear && \
+    echo '📊 Executando migrações...' && \
+    php artisan migrate --force --no-interaction && \
+    echo '🚀 Iniciando servidores...' && \
+    php-fpm -D && nginx -g 'daemon off;'"]
