@@ -92,5 +92,19 @@ COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # Limpa cache, Roda migrações e Inicia Nginx/PHP-FPM
 CMD /bin/bash -c "php artisan config:clear; php artisan cache:clear; php artisan migrate --force --no-interaction; php-fpm -D & nginx -g 'daemon off;'"
 
+CMD /bin/bash -c " \
+    # 1. Rotina de espera: Tenta conectar ao DB na porta 3306 
+    # (Pode ser ajustado se a conexão for recusada, mas tentaremos o sleep primeiro)
+    sleep 10; \
+    
+    # 2. Executa a limpeza e migração (agora que o DB tem 10 segundos para iniciar)
+    php artisan config:clear; \
+    php artisan cache:clear; \
+    php artisan view:clear; \
+    php artisan migrate --force --no-interaction; \
+    
+    # 3. Inicia o servidor (agora está tudo pronto)
+    php-fpm -D & nginx -g 'daemon off;'"
+
 # O Nginx está escutando na porta 80
 EXPOSE 80
