@@ -60,10 +60,10 @@ CHANGELOG.md
 npm-debug.log
 yarn-error.log
 yarn.lock
-package-lock.json
+# package-lock.json - NECESSÁRIO para build
 
 # Composer
-composer.lock
+# composer.lock - NECESSÁRIO para build
 
 # Backups
 *.sql
