@@ -1,6 +1,15 @@
 # Estágio 1: BUILD (Compilação e Instalação de Dependências)
 FROM php:8.2-fpm-alpine AS builder
 
+# NOVO: Argumentos de Build para injetar variáveis SECRETAS
+# O Coolify irá preencher estes ARGs automaticamente se forem definidos
+ARG RAWG_API_KEY
+ARG APP_KEY
+
+# É uma boa prática definir um ENV a partir do ARG para o processo
+ENV RAWG_API_KEY=$RAWG_API_KEY
+ENV APP_KEY=$APP_KEY
+
 # 1. Instalação de Ferramentas e Extensões
 RUN apk update && apk add --no-cache \
     nginx \
