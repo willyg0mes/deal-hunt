@@ -1,0 +1,239 @@
+version: '3.8'
+
+services:
+  # Aplicação Laravel
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - RAWG_API_KEY=${RAWG_API_KEY}
+        - APP_KEY=${APP_KEY}
+    container_name: deal-hunt-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    environment:
+      # App
+      - APP_NAME=${APP_NAME:-DealHunt}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost}
+      
+      # Database
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-deal_hunt}
+      - DB_USERNAME=${DB_USERNAME:-deal_hunt_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Cache & Sessions
+      - CACHE_DRIVER=${CACHE_DRIVER:-redis}
+      - SESSION_DRIVER=${SESSION_DRIVER:-redis}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
+      
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - REDIS_PORT=6379
+      
+      # Broadcasting (Pusher)
+      - BROADCAST_DRIVER=${BROADCAST_DRIVER:-pusher}
+      - PUSHER_APP_ID=${PUSHER_APP_ID}
+      - PUSHER_APP_KEY=${PUSHER_APP_KEY}
+      - PUSHER_APP_SECRET=${PUSHER_APP_SECRET}
+      - PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER:-mt1}
+      
+      # External APIs
+      - RAWG_API_KEY=${RAWG_API_KEY}
+      - GOOGLE_TRANSLATE_API_KEY=${GOOGLE_TRANSLATE_API_KEY}
+      
+      # Mail
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-smtp.mailtrap.io}
+      - MAIL_PORT=${MAIL_PORT:-2525}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-tls}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@dealhunt.com}
+      - MAIL_FROM_NAME="${MAIL_FROM_NAME:-Deal Hunt}"
+    volumes:
+      - storage-data:/var/www/html/storage/app
+      - ./storage/logs:/var/www/html/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - deal-hunt-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Queue Worker (para processar jobs em background)
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - RAWG_API_KEY=${RAWG_API_KEY}
+        - APP_KEY=${APP_KEY}
+    container_name: deal-hunt-queue
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    environment:
+      - APP_NAME=${APP_NAME:-DealHunt}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-deal_hunt}
+      - DB_USERNAME=${DB_USERNAME:-deal_hunt_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CACHE_DRIVER=${CACHE_DRIVER:-redis}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-redis}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - REDIS_PORT=6379
+      - RAWG_API_KEY=${RAWG_API_KEY}
+      - GOOGLE_TRANSLATE_API_KEY=${GOOGLE_TRANSLATE_API_KEY}
+    volumes:
+      - storage-data:/var/www/html/storage/app
+      - ./storage/logs:/var/www/html/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - deal-hunt-network
+
+  # Scheduler (cron jobs do Laravel)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - RAWG_API_KEY=${RAWG_API_KEY}
+        - APP_KEY=${APP_KEY}
+    container_name: deal-hunt-scheduler
+    restart: unless-stopped
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction &
+        sleep 60
+      done"
+    environment:
+      - APP_NAME=${APP_NAME:-DealHunt}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-deal_hunt}
+      - DB_USERNAME=${DB_USERNAME:-deal_hunt_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - CACHE_DRIVER=${CACHE_DRIVER:-redis}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-null}
+      - REDIS_PORT=6379
+      - RAWG_API_KEY=${RAWG_API_KEY}
+    volumes:
+      - storage-data:/var/www/html/storage/app
+      - ./storage/logs:/var/www/html/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - deal-hunt-network
+
+  # Banco de Dados MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: deal-hunt-mysql
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT_EXTERNAL:-3307}:3306"
+    environment:
+      - MYSQL_DATABASE=${DB_DATABASE:-deal_hunt}
+      - MYSQL_USER=${DB_USERNAME:-deal_hunt_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - deal-hunt-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Redis (Cache, Sessions, Queue)
+  redis:
+    image: redis:7-alpine
+    container_name: deal-hunt-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT_EXTERNAL:-6380}:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-null}
+    volumes:
+      - redis-data:/data
+    networks:
+      - deal-hunt-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin (opcional - remova em produção se não precisar)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: deal-hunt-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "${PMA_PORT:-8080}:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=${DB_ROOT_PASSWORD}
+      - UPLOAD_LIMIT=100M
+    depends_on:
+      - mysql
+    networks:
+      - deal-hunt-network
+    profiles:
+      - dev  # Só ativa se usar: docker-compose --profile dev up
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  storage-data:
+    driver: local
+
+networks:
+  deal-hunt-network:
+    driver: bridge
+

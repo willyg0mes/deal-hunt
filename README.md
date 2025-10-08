@@ -435,19 +435,64 @@ tests/
 
 ## 🚢 Deploy
 
-### Usando Docker
+### Opção 1: Docker Compose (Recomendado)
 
-O projeto inclui configuração Docker:
+O projeto inclui configuração completa de Docker Compose com todos os serviços necessários:
+
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/deal-hunt.git
+cd deal-hunt
+
+# Configure as variáveis de ambiente
+cp ENV_DOCKER_EXAMPLE.md .env
+# Edite o .env com suas configurações
+
+# Inicie todos os serviços
+docker-compose up -d
+
+# Verifique os logs
+docker-compose logs -f
+```
+
+**Serviços incluídos:**
+- ✅ App Laravel (Nginx + PHP-FPM)
+- ✅ MySQL 8.0
+- ✅ Redis 7
+- ✅ Queue Worker
+- ✅ Task Scheduler
+- ✅ phpMyAdmin (desenvolvimento)
+
+### Opção 2: Deploy no Coolify
+
+O projeto está otimizado para deploy no **Coolify** (alternativa self-hosted ao Heroku/Vercel).
+
+📖 **[Guia Completo de Deploy no Coolify](DEPLOY_COOLIFY.md)**
+
+**Resumo rápido:**
+1. Crie um projeto no Coolify
+2. Conecte o repositório Git
+3. Configure variáveis de ambiente (veja `ENV_DOCKER_EXAMPLE.md`)
+4. Configure domínio e SSL
+5. Deploy!
+
+### Opção 3: Docker Standalone
+
+Para executar apenas a aplicação:
 
 ```bash
 # Build da imagem
 docker build -t deal-hunt .
 
 # Executar container
-docker run -d -p 8000:8000 deal-hunt
+docker run -d -p 8000:8000 \
+  -e APP_KEY=your_app_key \
+  -e DB_HOST=seu_db_host \
+  -e DB_PASSWORD=sua_senha \
+  deal-hunt
 ```
 
-### Deploy em Produção
+### Deploy em Produção (VPS Tradicional)
 
 1. **Configure variáveis de ambiente**:
 ```env

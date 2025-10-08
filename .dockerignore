@@ -1,0 +1,83 @@
+# Dependências
+/node_modules
+/vendor
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Build e cache
+/public/hot
+/public/storage
+/public/build
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+!/storage/logs/.gitkeep
+!/storage/framework/cache/.gitkeep
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/views/.gitkeep
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testes
+/tests
+phpunit.xml
+/.phpunit.cache
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Docker
+docker-compose.override.yml
+Dockerfile.dev
+
+# Documentação e arquivos temporários
+README.md
+CHANGELOG.md
+*.md
+*.log
+*.txt
+
+# NPM/Node
+npm-debug.log
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# Composer
+composer.lock
+
+# Backups
+*.sql
+*.tar.gz
+*.zip
+/backups
+
+# Arquivos temporários de teste
+test_*.php
+debug_*.php
+analyze_*.php
+monitor_*.php
+fix_*.php
+check_*.php
+create_*.php
+investigate_*.php
+

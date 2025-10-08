@@ -100,3 +100,24 @@ Route::middleware('auth:web')->post('/notifications/broadcast-all', function (Re
         'notifications' => $notifications,
     ]);
 });
+
+// Health Check para Docker/Coolify
+Route::get('/health', function () {
+    try {
+        // Verifica conexão com o banco
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now()->toISOString(),
+            'database' => 'connected'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'timestamp' => now()->toISOString(),
+            'database' => 'disconnected',
+            'error' => $e->getMessage()
+        ], 503);
+    }
+});
