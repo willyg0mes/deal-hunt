@@ -41,7 +41,10 @@ COPY config ./config
 COPY routes ./routes
 COPY database ./database
 COPY public ./public
-COPY bootstrap ./bootstrap 
+COPY bootstrap ./bootstrap
+COPY vite.config.js ./
+COPY webpack.mix.js ./
+COPY resources ./resources
 
 # Copia arquivos de definição de dependência
 COPY composer.json composer.lock ./
