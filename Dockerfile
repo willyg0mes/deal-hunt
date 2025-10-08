@@ -1,8 +1,6 @@
 # Estágio 1: BUILD (Compilação e Instalação de Dependências)
 FROM php:8.2-fpm-alpine AS builder
 
-RUN apk update && apk add --no-cache mariadb-client \
-    && docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
 # NOVO: Argumentos de Build para injetar variáveis SECRETAS
 # O Coolify irá preencher estes ARGs automaticamente se forem definidos
 ARG RAWG_API_KEY
@@ -23,6 +21,8 @@ RUN apk update && apk add --no-cache \
     mariadb-client \
     nodejs \
     npm
+    
+RUN docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
 
 # Instala extensões PHP
 RUN docker-php-ext-install pdo pdo_mysql opcache exif pcntl bcmath gd
