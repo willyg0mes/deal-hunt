@@ -12,8 +12,10 @@ services:
         - APP_KEY=${APP_KEY}
     container_name: deal-hunt-app
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8000}:80"
+    # ports:
+    #   - "${APP_PORT:-8000}:80"  # Coolify gerencia isso via Traefik
+    expose:
+      - "80"  # Expõe apenas internamente para o Traefik
     environment:
       # App
       - APP_NAME=${APP_NAME:-DealHunt}
