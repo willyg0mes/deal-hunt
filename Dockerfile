@@ -102,11 +102,11 @@ EXPOSE 80
 # Comando de inicialização
 CMD ["/bin/bash", "-c", "\
     echo '⏳ Aguardando banco de dados...' && sleep 10 && \
-    echo '🧹 Limpando cache...' && \
-    php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan view:clear && \
     echo '📊 Executando migrações...' && \
     php artisan migrate --force --no-interaction && \
+    echo '🧹 Otimizando aplicação...' && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache && \
     echo '🚀 Iniciando servidores...' && \
     php-fpm -D && nginx -g 'daemon off;'"]
