@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Deal Hunt - Visualização do Projeto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .code-block {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12 animate-fade-in">
+            <h1 class="text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                🎮 Deal Hunt
+            </h1>
+            <p class="text-xl text-gray-300 mb-6">Plataforma de Agregação e Monitoramento de Ofertas de Jogos</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <span class="px-4 py-2 bg-red-600 rounded-full text-sm">Laravel 11</span>
+                <span class="px-4 py-2 bg-purple-600 rounded-full text-sm">Livewire 3</span>
+                <span class="px-4 py-2 bg-blue-600 rounded-full text-sm">Tailwind CSS</span>
+                <span class="px-4 py-2 bg-green-600 rounded-full text-sm">PHP 8.2+</span>
+                <span class="px-4 py-2 bg-cyan-600 rounded-full text-sm">MySQL</span>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in">
+            <a href="#overview" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Visão Geral</a>
+            <a href="#architecture" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Arquitetura</a>
+            <a href="#features" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Funcionalidades</a>
+            <a href="#structure" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Estrutura</a>
+            <a href="#models" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Modelos</a>
+            <a href="#routes" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition">Rotas</a>
+        </nav>
+
+        <!-- Overview Section -->
+        <section id="overview" class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">📋 Visão Geral</h2>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                <p class="text-lg text-gray-300 mb-4">
+                    O <strong>Deal Hunt</strong> é uma plataforma completa desenvolvida com Laravel 11 e Livewire 3 que permite aos usuários descobrirem as melhores promoções de jogos digitais.
+                </p>
+                <div class="grid md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-3 text-purple-400">🎯 Objetivo Principal</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li>Agregação de ofertas de múltiplas lojas</li>
+                            <li>Notificações em tempo real</li>
+                            <li>Sistema de wishlist inteligente</li>
+                            <li>Conversão de moedas automática</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-3 text-green-400">✨ Diferenciais</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">
+                            <li>Tradução automática PT-BR</li>
+                            <li>Autenticação 2FA (Google Authenticator)</li>
+                            <li>Design responsivo moderno</li>
+                            <li>Painel administrativo completo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section id="architecture" class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">🏗️ Arquitetura do Sistema</h2>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Frontend -->
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-700 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4">Frontend</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center"><span class="mr-2">✓</span> Livewire 3</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Tailwind CSS</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Alpine.js</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Vite</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Laravel Echo</li>
+                        </ul>
+                    </div>
+
+                    <!-- Backend -->
+                    <div class="bg-gradient-to-br from-purple-900 to-purple-700 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4">Backend</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center"><span class="mr-2">✓</span> Laravel 11</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> PHP 8.2+</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Eloquent ORM</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Queue System</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Fortify Auth</li>
+                        </ul>
+                    </div>
+
+                    <!-- Integrations -->
+                    <div class="bg-gradient-to-br from-green-900 to-green-700 p-6 rounded-lg">
+                        <h3 class="text-2xl font-bold mb-4">Integrações</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center"><span class="mr-2">✓</span> RAWG API</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Steam API</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> ExchangeRate API</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Google Translate</li>
+                            <li class="flex items-center"><span class="mr-2">✓</span> Pusher (WebSocket)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">✨ Funcionalidades Principais</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">🔍</div>
+                    <h3 class="text-xl font-semibold mb-2">Descoberta de Ofertas</h3>
+                    <p class="text-gray-300">Navegue por milhares de jogos com descontos atualizados de múltiplas lojas.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">💝</div>
+                    <h3 class="text-xl font-semibold mb-2">Wishlist Inteligente</h3>
+                    <p class="text-gray-300">Adicione jogos e receba alertas automáticos quando entrarem em promoção.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">🔔</div>
+                    <h3 class="text-xl font-semibold mb-2">Notificações Reais</h3>
+                    <p class="text-gray-300">Sistema de notificações push via Pusher/WebSockets em tempo real.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">💱</div>
+                    <h3 class="text-xl font-semibold mb-2">Conversão de Moedas</h3>
+                    <p class="text-gray-300">Suporte a 7 moedas: BRL, USD, EUR, GBP, CAD, AUD, JPY.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">🌐</div>
+                    <h3 class="text-xl font-semibold mb-2">Tradução Automática</h3>
+                    <p class="text-gray-300">Descrições de jogos traduzidas automaticamente para PT-BR.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">🔐</div>
+                    <h3 class="text-xl font-semibold mb-2">Autenticação 2FA</h3>
+                    <p class="text-gray-300">Login seguro com Google Authenticator e dispositivos confiáveis.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">📊</div>
+                    <h3 class="text-xl font-semibold mb-2">Dashboard Admin</h3>
+                    <p class="text-gray-300">Painel completo para gerenciar jogos, traduções e usuários.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">📱</div>
+                    <h3 class="text-xl font-semibold mb-2">Design Responsivo</h3>
+                    <p class="text-gray-300">Interface moderna adaptável para todos os dispositivos.</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg hover:bg-gray-700 transition">
+                    <div class="text-3xl mb-3">🎨</div>
+                    <h3 class="text-xl font-semibold mb-2">Tema Dark/Light</h3>
+                    <p class="text-gray-300">Suporte a modo escuro/claro com preferência salva.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Structure Section -->
+        <section id="structure" class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">📁 Estrutura do Projeto</h2>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                <div class="code-block bg-gray-900 p-4 rounded-lg overflow-x-auto">
+<pre class="text-green-400">deal-hunt/
+├── <span class="text-blue-400">app/</span>
+│   ├── Actions/          # Ações customizadas (Fortify)
+│   ├── Console/          # Comandos Artisan (19 comandos)
+│   ├── Events/           # Eventos do sistema
+│   ├── Helpers/          # Funções auxiliares
+│   ├── Http/
+│   │   ├── Controllers/  # Controllers MVC (20 controllers)
+│   │   │   ├── Admin/    # Controllers administrativos
+│   │   │   ├── Api/      # Controllers de API
+│   │   │   └── Auth/     # Controllers de autenticação
+│   │   ├── Middleware/   # Middlewares customizados (4)
+│   │   └── Requests/     # Form Requests
+│   ├── Jobs/             # Jobs de fila (traduções, updates)
+│   ├── Models/           # Modelos Eloquent (9 modelos)
+│   ├── Notifications/    # Notificações (email, push)
+│   ├── Observers/        # Observers do Eloquent
+│   ├── Providers/        # Service Providers
+│   └── Services/         # Serviços (RAWG, Translation, Currency)
+├── <span class="text-blue-400">database/</span>
+│   ├── migrations/       # Migrações (20 arquivos)
+│   ├── seeders/          # Seeders (3 arquivos)
+│   └── factories/        # Factories para testes
+├── <span class="text-blue-400">resources/</span>
+│   ├── views/            # Blade templates (61 views)
+│   ├── js/               # JavaScript/Alpine
+│   └── css/              # Tailwind CSS
+├── <span class="text-blue-400">routes/</span>
+│   ├── web.php           # Rotas web
+│   ├── api.php           # Rotas API
+│   ├── channels.php      # Broadcasting channels
+│   └── auth.php          # Rotas de autenticação
+└── <span class="text-blue-400">tests/</span>
+    ├── Feature/          # Testes de integração (8 arquivos)
+    └── Unit/             # Testes unitários</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Models Section -->
+        <section id="models" class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">🗂️ Modelos Principais</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-400">Game</h3>
+                    <p class="text-gray-300 mb-4">Modelo principal que representa um jogo e suas ofertas.</p>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <p class="text-sm font-semibold mb-2 text-green-400">Campos principais:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>title, image, store, store_name</li>
+                            <li>normal_price, sale_price, discount_percent</li>
+                            <li>deal_ends_at, description, external_id</li>
+                            <li>is_active, is_free_permanently</li>
+                        </ul>
+                        <p class="text-sm font-semibold mt-3 text-green-400">Relacionamentos:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>belongsToMany Category</li>
+                            <li>belongsToMany User (wishlist)</li>
+                            <li>hasMany GameTranslation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-400">User</h3>
+                    <p class="text-gray-300 mb-4">Modelo de usuário com autenticação 2FA e preferências.</p>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <p class="text-sm font-semibold mb-2 text-green-400">Funcionalidades:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>Autenticação via Fortify</li>
+                            <li>2FA com Google Authenticator</li>
+                            <li>Gerenciamento de wishlist</li>
+                            <li>Preferências de moeda e tema</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-400">GameTranslation</h3>
+                    <p class="text-gray-300 mb-4">Armazena traduções de descrições de jogos.</p>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <p class="text-sm font-semibold mb-2 text-green-400">Campos:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>game_id, field_name</li>
+                            <li>original_text, translated_text</li>
+                            <li>translation_method, language</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-400">Notification</h3>
+                    <p class="text-gray-300 mb-4">Sistema de notificações em tempo real.</p>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <p class="text-sm font-semibold mb-2 text-green-400">Tipos:</p>
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>GameDiscountNotification</li>
+                            <li>GameOnSaleNotification</li>
+                            <li>Notificações customizadas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-400">Category</h3>
+                    <p class="text-gray-300 mb-4">Categorias de jogos (Ação, RPG, Estratégia, etc.)</p>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-400">Outros Modelos</h3>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <ul class="text-xs text-gray-400 space-y-1">
+                            <li>AdminLog - Logs administrativos</li>
+                            <li>AppMetric - Métricas do sistema</li>
+                            <li>LoginHistory - Histórico de logins</li>
+                            <li>TrustedDevice - Dispositivos confiáveis</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Routes Section -->
+        <section id="routes" class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">🛣️ Rotas Principais</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-green-400">Rotas Públicas</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/</span>
+                            <span class="text-gray-300">Home</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/games</span>
+                            <span class="text-gray-300">Lista de jogos</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/games/{id}</span>
+                            <span class="text-gray-300">Detalhes do jogo</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/games/free</span>
+                            <span class="text-gray-300">Jogos gratuitos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-green-400">Rotas Autenticadas</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/dashboard</span>
+                            <span class="text-gray-300">Dashboard do usuário</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-green-400">POST</span> <span class="text-yellow-400">/wishlist/toggle/{game}</span>
+                            <span class="text-gray-300">Adicionar/remover wishlist</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/wishlist</span>
+                            <span class="text-gray-300">Minha wishlist</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/notificacoes</span>
+                            <span class="text-gray-300">Lista de notificações</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-green-400">Rotas Admin</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/admin</span>
+                            <span class="text-gray-300">Dashboard admin</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/admin/translations</span>
+                            <span class="text-gray-300">Gerenciar traduções</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/admin/currency</span>
+                            <span class="text-gray-300">Gerenciar moedas</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/admin/free-games</span>
+                            <span class="text-gray-300">Jogos gratuitos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-green-400">API Endpoints</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/api/notifications/unread-latest</span>
+                            <span class="text-gray-300">Notificações não lidas</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-green-400">POST</span> <span class="text-yellow-400">/api/notifications/{id}/mark-as-read</span>
+                            <span class="text-gray-300">Marcar como lida</span>
+                        </div>
+                        <div class="bg-gray-900 p-2 rounded">
+                            <span class="text-blue-400">GET</span> <span class="text-yellow-400">/api/health</span>
+                            <span class="text-gray-300">Health check</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">⚙️ Serviços Principais</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3 text-purple-400">RawgService</h3>
+                    <p class="text-gray-300 text-sm mb-3">Integração com RAWG API para buscar informações de jogos.</p>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• searchGame()</li>
+                        <li>• getGameDetails()</li>
+                        <li>• getBestGameImage()</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3 text-purple-400">TranslationService</h3>
+                    <p class="text-gray-300 text-sm mb-3">Tradução automática de descrições usando Google Translate.</p>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• translateText()</li>
+                        <li>• translateGameDescription()</li>
+                        <li>• Fallback strategies</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-3 text-purple-400">CurrencyConversionService</h3>
+                    <p class="text-gray-300 text-sm mb-3">Conversão de moedas em tempo real via ExchangeRate API.</p>
+                    <ul class="text-xs text-gray-400 space-y-1">
+                        <li>• convertFromUSD()</li>
+                        <li>• formatCurrency()</li>
+                        <li>• 7 moedas suportadas</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Commands Section -->
+        <section class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">🎮 Comandos Artisan</h2>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-xl">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <code class="text-green-400">php artisan games:sync</code>
+                        <p class="text-gray-400 text-sm mt-2">Sincronizar jogos com APIs externas</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <code class="text-green-400">php artisan translations:process</code>
+                        <p class="text-gray-400 text-sm mt-2">Processar traduções pendentes</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <code class="text-green-400">php artisan currency:update</code>
+                        <p class="text-gray-400 text-sm mt-2">Atualizar taxas de câmbio</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <code class="text-green-400">php artisan notifications:send-deals</code>
+                        <p class="text-gray-400 text-sm mt-2">Enviar notificações de promoções</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <code class="text-green-400">php artisan cache:clear-all</code>
+                        <p class="text-gray-400 text-sm mt-2">Limpar cache do sistema</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-lg">
+                        <code class="text-green-400">composer dev</code>
+                        <p class="text-gray-400 text-sm mt-2">Rodar ambiente completo</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="mb-16 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-6 text-blue-400">📊 Estatísticas do Projeto</h2>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-lg text-center">
+                    <div class="text-4xl font-bold mb-2">20</div>
+                    <div class="text-gray-300">Controllers</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 p-6 rounded-lg text-center">
+                    <div class="text-4xl font-bold mb-2">9</div>
+                    <div class="text-gray-300">Modelos</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-600 to-green-800 p-6 rounded-lg text-center">
+                    <div class="text-4xl font-bold mb-2">61</div>
+                    <div class="text-gray-300">Views</div>
+                </div>
+                <div class="bg-gradient-to-br from-orange-600 to-orange-800 p-6 rounded-lg text-center">
+                    <div class="text-4xl font-bold mb-2">20</div>
+                    <div class="text-gray-300">Migrações</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center mt-16 pb-8">
+            <p class="text-gray-400">🎮 Deal Hunt - Plataforma de Ofertas de Jogos</p>
+            <p class="text-gray-500 text-sm mt-2">Desenvolvido com Laravel 11 + Livewire 3</p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(20px)';
+            section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
