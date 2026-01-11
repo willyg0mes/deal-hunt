@@ -629,12 +629,6 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ---
 
-## 📞 Suporte
-
-Para suporte, envie um email para suporte@dealhunt.com ou abra uma issue no GitHub.
-
----
-
 <div align="center">
   <strong>🎮 Happy Gaming & Happy Hunting! 🎯</strong>
 </div>
