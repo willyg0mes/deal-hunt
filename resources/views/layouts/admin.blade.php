@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>@yield('title', 'Painel Administrativo') - {{ config('app.name', 'DealHunt') }}</title>
+        <title>@yield('title', 'Painel Administrativo') - {{ config('app.name', 'DealHunt - Gaming Deals') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
