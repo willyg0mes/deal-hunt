@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    /* Steam header 460×215 — evita depender de arbitrary class no build */
+    .game-cover {
+        aspect-ratio: 460 / 215;
+    }
+}

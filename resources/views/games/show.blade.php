@@ -191,7 +191,7 @@ function isEnglishText($text) {
                 
                 <!-- Capa (aspect Steam header 460×215) -->
                 <div class="flex justify-center xl:justify-start xl:w-[min(100%,28rem)] shrink-0">
-                    <div class="relative w-full max-w-md xl:max-w-none aspect-[460/215] overflow-hidden rounded-xl shadow-lg border border-gray-600/50 bg-gray-950">
+                    <div class="relative w-full max-w-md xl:max-w-none game-cover overflow-hidden rounded-xl shadow-lg border border-gray-600/50 bg-gray-950">
                         <img src="{{ $game->optimized_image }}" alt="{{ $game->title }}"
                              class="absolute inset-0 w-full h-full object-cover object-center"
                              width="460" height="215"

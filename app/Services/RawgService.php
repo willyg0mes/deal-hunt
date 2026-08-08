@@ -137,7 +137,15 @@ class RawgService
                 return null;
             }
 
-            return 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/'.$appId.'/header.jpg';
+            $url = \App\Models\Game::steamHeaderUrl((int) $appId);
+
+            // Confirma que o header existe (evita appId errado / 404)
+            $check = Http::timeout(3)->head($url);
+            if ($check->successful()) {
+                return $url;
+            }
+
+            return null;
         } catch (\Exception $e) {
             return null;
         }
@@ -227,11 +235,12 @@ class RawgService
     }
 
     /**
-     * Imagem de fallback personalizada
+     * Sem placeholder externo (via.placeholder.com costuma falhar).
+     * O accessor do Game trata ausência de imagem na UI.
      */
-    private function getFallbackImage(string $title): string
+    private function getFallbackImage(string $title): ?string
     {
-        return 'https://via.placeholder.com/460x215/1a1a1a/ffffff?text='.urlencode($title);
+        return null;
     }
 
     /**

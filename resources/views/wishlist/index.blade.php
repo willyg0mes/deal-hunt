@@ -62,7 +62,7 @@
                 @foreach($games as $game)
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                         <!-- Capa 460×215 -->
-                        <div class="relative aspect-[460/215] overflow-hidden bg-gray-950">
+                        <div class="relative game-cover overflow-hidden bg-gray-950">
                             <img src="{{ $game->optimized_image }}" alt="{{ $game->title }}" class="absolute inset-0 w-full h-full object-cover object-center"
                                  onerror="this.onerror=null; this.src='{{ $game->placeholderCoverUrl() }}';">
                             

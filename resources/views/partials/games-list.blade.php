@@ -16,7 +16,7 @@
     @forelse($games as $game)
     <article class="group flex flex-col overflow-hidden rounded-xl border border-gray-700/50 bg-gray-900/80 shadow-lg shadow-black/40 transition duration-300 hover:border-red-800/40 hover:shadow-red-950/30 hover:-translate-y-0.5">
         {{-- Capa no aspect Steam header (460×215) — object-cover sem altura arbitrária --}}
-        <a href="{{ route('games.show', $game) }}" class="relative block w-full aspect-[460/215] overflow-hidden bg-gray-950">
+        <a href="{{ route('games.show', $game) }}" class="relative block w-full game-cover overflow-hidden bg-gray-950">
             <img
                 src="{{ $game->optimized_image }}"
                 alt="{{ $game->title }}"

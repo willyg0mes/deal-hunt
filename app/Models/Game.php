@@ -247,7 +247,7 @@ class Game extends Model
 
     public function placeholderCoverUrl(): string
     {
-        return 'https://via.placeholder.com/460x215/1a1a1a/ffffff?text='.urlencode((string) $this->title);
+        return 'https://placehold.co/460x215/1a1a1a/ffffff?text='.urlencode((string) $this->title);
     }
 
     /**
@@ -276,16 +276,17 @@ class Game extends Model
             return null;
         }
 
-        if (preg_match('#/steam/apps/(\d+)/#i', $url, $matches)) {
-            return 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/'.$matches[1].'/header.jpg';
-        }
-
-        // Tiny image style: .../apps/123/header_... or capsule with app id elsewhere
-        if (preg_match('#apps/(\d+)#i', $url, $matches)) {
-            return 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/'.$matches[1].'/header.jpg';
+        if (preg_match('#/(?:steam/)?apps/(\d+)/#i', $url, $matches)
+            || preg_match('#apps/(\d+)#i', $url, $matches)) {
+            return self::steamHeaderUrl((int) $matches[1]);
         }
 
         return null;
+    }
+
+    public static function steamHeaderUrl(int $appId): string
+    {
+        return 'https://cdn.cloudflare.steamstatic.com/steam/apps/'.$appId.'/header.jpg';
     }
 
     /**
