@@ -212,7 +212,7 @@
             @endauth
 
             <!-- Conteúdo Principal -->
-            <main class="flex-1 overflow-x-hidden @auth xl:ml-0 @endauth"
+            <main class="flex-1 overflow-x-hidden @auth xl:ml-0 @endauth">
                 @yield('content')
             </main>
         </div>
@@ -660,8 +660,5 @@
     
     {{-- Wishlist AJAX --}}
     <script src="{{ asset('js/wishlist-ajax.js') }}"></script>
-    
-    {{-- Alpine.js para interatividade --}}
-    <script src="//unpkg.com/alpinejs" defer></script>
 </body>
 </html>
