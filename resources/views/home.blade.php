@@ -8,7 +8,6 @@
 <div class="w-full">
     <div class="px-4 sm:px-6 py-6 max-w-[1600px] mx-auto">
 
-        {{-- Carrossel de destaques: vários cards, o do meio em evidência --}}
         @if($topGames->isNotEmpty())
         <section class="mb-8 sm:mb-10">
             <div class="flex items-end justify-between mb-4 px-0.5">
@@ -22,37 +21,32 @@
                 </div>
             </div>
 
-            <div class="featured-swiper-wrap relative">
+            <div class="featured-swiper-wrap relative px-0 sm:px-8">
                 <div class="swiper featuredSwiper">
-                    <div class="swiper-wrapper items-center py-4 sm:py-6">
-                        @foreach($topGames as $game)
+                    <div class="swiper-wrapper">
+                        @foreach($topGames as $index => $game)
                         <div class="swiper-slide featured-slide">
-                            <a href="{{ route('games.show', $game) }}"
-                               class="featured-card group relative block overflow-hidden rounded-xl border border-gray-700/60 bg-gray-950 shadow-lg shadow-black/40 transition-shadow duration-300">
-                                <div class="game-cover relative w-full overflow-hidden">
-                                    <img src="{{ $game->optimized_image }}" alt="{{ $game->title }}"
-                                         class="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.03]"
-                                         loading="lazy"
-                                         decoding="async"
-                                         width="460"
-                                         height="215"
-                                         onerror="this.onerror=null; this.src='{{ $game->placeholderCoverUrl() }}';" />
-                                    <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-
-                                    <span class="absolute top-2 left-2 rounded bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white shadow">
-                                        -{{ $game->discount_percent }}%
-                                    </span>
-                                    <span class="absolute top-2 right-2 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow {{ $game->store_color }}">
-                                        {{ $game->store_name }}
-                                    </span>
+                            <a href="{{ route('games.show', $game) }}" class="featured-card group">
+                                <div class="featured-media">
+                                    <img
+                                        src="{{ $game->optimized_image }}"
+                                        alt="{{ $game->title }}"
+                                        width="460"
+                                        height="215"
+                                        loading="{{ $index < 4 ? 'eager' : 'lazy' }}"
+                                        decoding="async"
+                                        onerror="this.onerror=null; this.src='{{ $game->placeholderCoverUrl() }}';"
+                                    />
+                                    <div class="featured-media-fade"></div>
+                                    <span class="featured-badge-discount">-{{ $game->discount_percent }}%</span>
+                                    <span class="featured-badge-store {{ $game->store_color }}">{{ $game->store_name }}</span>
                                 </div>
-
-                                <div class="featured-card-body relative px-3 py-2.5 sm:px-3.5 sm:py-3">
-                                    <h2 class="text-sm sm:text-base font-bold text-white leading-snug line-clamp-2 min-h-[2.5rem]">{{ $game->title }}</h2>
-                                    <div class="mt-1.5 flex items-baseline gap-2">
-                                        <span class="text-base sm:text-lg font-bold text-emerald-400"><x-price :price="$game->sale_price" /></span>
+                                <div class="featured-card-body">
+                                    <h2>{{ $game->title }}</h2>
+                                    <div class="featured-prices">
+                                        <span class="featured-price"><x-price :price="$game->sale_price" /></span>
                                         @if($game->normal_price > $game->sale_price)
-                                            <span class="text-xs text-gray-500 line-through"><x-price :price="$game->normal_price" /></span>
+                                            <span class="featured-price-old"><x-price :price="$game->normal_price" /></span>
                                         @endif
                                     </div>
                                 </div>
@@ -69,7 +63,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </button>
 
-                <div class="featured-pagination mt-3 flex justify-center"></div>
+                <div class="featured-pagination"></div>
             </div>
         </section>
         @endif
@@ -97,21 +91,15 @@
         if (!el || typeof Swiper === 'undefined') return;
 
         new Swiper('.featuredSwiper', {
-            effect: 'coverflow',
-            grabCursor: true,
+            slidesPerView: 1.15,
             centeredSlides: true,
+            spaceBetween: 14,
             loop: {{ $topGames->count() >= 5 ? 'true' : 'false' }},
-            slidesPerView: 1.25,
-            spaceBetween: 12,
-            coverflowEffect: {
-                rotate: 0,
-                stretch: -10,
-                depth: 120,
-                modifier: 1.4,
-                slideShadows: false,
-            },
+            speed: 900,
+            grabCursor: true,
+            watchSlidesProgress: true,
             autoplay: {
-                delay: 3500,
+                delay: 4200,
                 disableOnInteraction: false,
                 pauseOnMouseEnter: true,
             },
@@ -124,9 +112,9 @@
                 clickable: true,
             },
             breakpoints: {
-                640: { slidesPerView: 2.2, spaceBetween: 16 },
-                900: { slidesPerView: 3, spaceBetween: 18 },
-                1200: { slidesPerView: 3.4, spaceBetween: 20 },
+                640:  { slidesPerView: 2.1, spaceBetween: 18 },
+                900:  { slidesPerView: 2.6, spaceBetween: 20 },
+                1200: { slidesPerView: 3.15, spaceBetween: 22 },
             },
         });
     });
@@ -134,80 +122,195 @@
 
 <style>
 .featured-swiper-wrap {
-    --featured-pad: 0.5rem;
+    overflow: hidden;
+    padding-bottom: 0.25rem;
 }
 
 .featuredSwiper {
     overflow: visible;
-    padding: 0 var(--featured-pad);
+    padding: 1.25rem 0 1.5rem;
 }
 
 .featured-slide {
     height: auto;
-    transition: opacity 0.35s ease;
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 0.55;
+    transform: scale(0.9);
+}
+
+.swiper-slide-prev,
+.swiper-slide-next,
+.swiper-slide-duplicate-prev,
+.swiper-slide-duplicate-next {
+    opacity: 0.78;
+    transform: scale(0.95);
+}
+
+.swiper-slide-active,
+.swiper-slide-duplicate-active {
+    opacity: 1;
+    transform: scale(1.05);
+    z-index: 3;
 }
 
 .featured-card {
-    transform: scale(0.88);
-    opacity: 0.55;
-    transition: transform 0.4s ease, opacity 0.35s ease, box-shadow 0.35s ease;
-    will-change: transform, opacity;
+    display: block;
+    overflow: hidden;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(75, 85, 99, 0.55);
+    background: #0b0f17;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    transition: box-shadow 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.9s ease;
+    text-decoration: none;
 }
 
 .swiper-slide-active .featured-card,
 .swiper-slide-duplicate-active .featured-card {
-    transform: scale(1.06);
-    opacity: 1;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(185, 28, 28, 0.35);
-    z-index: 2;
+    border-color: rgba(185, 28, 28, 0.45);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(185, 28, 28, 0.25);
 }
 
-.swiper-slide-prev .featured-card,
-.swiper-slide-next .featured-card,
-.swiper-slide-duplicate-prev .featured-card,
-.swiper-slide-duplicate-next .featured-card {
-    transform: scale(0.94);
-    opacity: 0.78;
+/* Capa com proporção estável (não depende de absolute + aspect em transform 3D) */
+.featured-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 460 / 215;
+    background: #111827;
+    overflow: hidden;
+}
+
+.featured-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.featured-card:hover .featured-media img {
+    transform: scale(1.04);
+}
+
+.featured-media-fade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.featured-badge-discount {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: #059669;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.35rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+
+.featured-badge-store {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.35rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+
+.featured-card-body {
+    padding: 0.75rem 0.9rem 0.9rem;
+}
+
+.featured-card-body h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5rem;
+}
+
+.featured-prices {
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.featured-price {
+    color: #34d399;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.featured-price-old {
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-decoration: line-through;
 }
 
 .featured-nav {
     position: absolute;
     top: 42%;
     z-index: 20;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.6rem;
+    height: 2.6rem;
     border-radius: 9999px;
     border: 1px solid rgba(75, 85, 99, 0.8);
-    background: rgba(17, 24, 39, 0.85);
+    background: rgba(17, 24, 39, 0.88);
     color: #f3f4f6;
     backdrop-filter: blur(6px);
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
 }
 .featured-nav:hover {
-    background: rgba(185, 28, 28, 0.9);
-    border-color: rgba(248, 113, 113, 0.6);
-    color: #fff;
+    background: rgba(185, 28, 28, 0.92);
+    border-color: rgba(248, 113, 113, 0.55);
+    transform: scale(1.06);
 }
 .featured-prev { left: 0; }
 .featured-next { right: 0; }
 
-@media (max-width: 639px) {
-    .featured-nav { display: none; }
-    .featured-card { transform: scale(0.94); opacity: 0.7; }
-    .swiper-slide-active .featured-card {
-        transform: scale(1.02);
-        opacity: 1;
-    }
+@media (min-width: 640px) {
+    .featured-nav { display: flex; }
 }
 
+.featured-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+}
 .featured-pagination .swiper-pagination-bullet {
+    width: 0.5rem;
+    height: 0.5rem;
     background: #6b7280;
-    opacity: 0.55;
+    opacity: 0.45;
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.45s ease,
+                background 0.45s ease,
+                border-radius 0.45s ease;
 }
 .featured-pagination .swiper-pagination-bullet-active {
+    width: 1.35rem;
+    border-radius: 9999px;
     background: var(--color-primary);
     opacity: 1;
 }
