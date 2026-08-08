@@ -5,16 +5,19 @@ namespace App\Console\Commands;
 use App\Events\NewNotification;
 use App\Models\Notification;
 use App\Models\User;
+use App\Console\Concerns\GuardsNonLocalCommands;
 use Illuminate\Console\Command;
 
 class TestNotification extends Command
 {
+    use GuardsNonLocalCommands;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'test:notification {user_id? : ID do usuário}';
+    protected $signature = 'test:notification {user_id? : ID do usuário} {--force}';
 
     /**
      * The console command description.
@@ -28,6 +31,10 @@ class TestNotification extends Command
      */
     public function handle()
     {
+        if (! $this->ensureSafeEnvironment()) {
+            return self::FAILURE;
+        }
+
         $userId = $this->argument('user_id') ?? User::first()?->id;
         
         if (!$userId) {

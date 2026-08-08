@@ -1,10 +1,10 @@
 # 🎮 Deal Hunt
 
-**Deal Hunt** é uma plataforma completa de agregação e monitoramento de ofertas de jogos, desenvolvida com Laravel 11 e Livewire. O sistema permite aos usuários descobrirem as melhores promoções, gerenciarem listas de desejos e receberem notificações em tempo real sobre descontos especiais.
+**Deal Hunt** é uma plataforma completa de agregação e monitoramento de ofertas de jogos, desenvolvida com Laravel 11. O sistema permite aos usuários descobrirem as melhores promoções, gerenciarem listas de desejos e receberem notificações em tempo real sobre descontos especiais.
 
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-red.svg)](https://laravel.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://php.net)
-[![Livewire](https://img.shields.io/badge/Livewire-3.x-purple.svg)](https://livewire.laravel.com)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-cyan.svg)](https://tailwindcss.com)
 
 ---
@@ -55,9 +55,8 @@
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
-- **[Laravel 11](https://laravel.com)** - Framework PHP moderno
-- **[Livewire 3](https://livewire.laravel.com)** - Framework full-stack reativo
-- **[Laravel Fortify](https://laravel.com/docs/fortify)** - Autenticação robusta
+- **[Laravel 11](https://laravel.com)** - Framework PHP
+- **[Laravel Fortify](https://laravel.com/docs/fortify)** - Autenticação
 - **[Laravel Sanctum](https://laravel.com/docs/sanctum)** - API authentication
 - **[Pusher](https://pusher.com)** - WebSockets e notificações em tempo real
 
@@ -230,7 +229,7 @@ deal-hunt/
 │   ├── Helpers/          # Funções auxiliares (CurrencyHelper)
 │   ├── Http/
 │   │   ├── Controllers/  # Controllers MVC
-│   │   └── Livewire/     # Componentes Livewire
+│   │   └── Middleware/   # Auth, admin, trusted device
 │   ├── Jobs/             # Jobs de fila (traduções, scraping)
 │   ├── Models/           # Modelos Eloquent
 │   ├── Notifications/    # Notificações (email, push)
@@ -623,7 +622,7 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 ## 🙏 Agradecimentos
 
 - [Laravel](https://laravel.com) - Framework excepcional
-- [Livewire](https://livewire.laravel.com) - Magia reativa
+- [Fortify](https://laravel.com/docs/fortify) - Autenticação
 - [RAWG](https://rawg.io) - API de jogos
 - [Tailwind CSS](https://tailwindcss.com) - Framework CSS incrível
 

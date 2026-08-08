@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\GuardsNonLocalCommands;
 use Illuminate\Console\Command;
 use App\Models\User;
 use App\Models\Notification;
@@ -10,12 +11,14 @@ use Illuminate\Support\Facades\Log;
 
 class TestNotificationsByCategory extends Command
 {
+    use GuardsNonLocalCommands;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'notification:test-category {category? : Categoria da notificação (wishlist, aaa, flash, indie, bundle, event, classic, award)}';
+    protected $signature = 'notification:test-category {category? : Categoria da notificação (wishlist, aaa, flash, indie, bundle, event, classic, award)} {--force}';
 
     /**
      * The console command description.
@@ -29,6 +32,10 @@ class TestNotificationsByCategory extends Command
      */
     public function handle()
     {
+        if (! $this->ensureSafeEnvironment()) {
+            return self::FAILURE;
+        }
+
         $category = $this->argument('category');
         
         $categories = [

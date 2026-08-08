@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\GuardsNonLocalCommands;
 use Illuminate\Console\Command;
 use App\Models\User;
 use App\Models\Notification;
@@ -10,12 +11,14 @@ use Illuminate\Support\Facades\Log;
 
 class SendTestNotificationToAll extends Command
 {
+    use GuardsNonLocalCommands;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'notification:test-all {--message= : Mensagem personalizada para a notificação}';
+    protected $signature = 'notification:test-all {--message= : Mensagem personalizada para a notificação} {--force}';
 
     /**
      * The console command description.
@@ -29,6 +32,10 @@ class SendTestNotificationToAll extends Command
      */
     public function handle()
     {
+        if (! $this->ensureSafeEnvironment()) {
+            return self::FAILURE;
+        }
+
         $customMessage = $this->option('message');
         
         $defaultMessages = [

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Concerns\GuardsNonLocalCommands;
 use Illuminate\Console\Command;
 use App\Models\User;
 use App\Models\Notification;
@@ -9,11 +10,17 @@ use Carbon\Carbon;
 
 class TestNotificationSystem extends Command
 {
-    protected $signature = 'test:notification-system';
+    use GuardsNonLocalCommands;
+
+    protected $signature = 'test:notification-system {--force}';
     protected $description = 'Testa o sistema de notificações em tempo real';
 
     public function handle()
     {
+        if (! $this->ensureSafeEnvironment()) {
+            return self::FAILURE;
+        }
+
         $this->info('🔄 Testando sistema de notificações...');
         
         $user = User::first();
