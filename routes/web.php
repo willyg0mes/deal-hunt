@@ -16,10 +16,10 @@ use App\Http\Middleware\CheckTrustedDevice;
 Route::middleware(['web'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     
-    // Rotas públicas - não requerem autenticação
-    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+    // Rotas públicas - não requerem autenticação (rotas específicas antes de /games/{game})
     Route::get('/games', [GameController::class, 'index'])->name('games.index');
     Route::get('/games/free', [GameController::class, 'free'])->name('games.free');
+    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
 
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
@@ -37,26 +37,6 @@ Route::middleware(['web'])->group(function () {
         Route::delete('/notificacoes/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
         Route::post('/notificacoes/marcar-todas', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAll');
 
-        // 🌐 Rotas do Painel Administrativo de Traduções
-        Route::prefix('admin/translations')->name('admin.translations.')->group(function () {
-            Route::get('/', [TranslationController::class, 'index'])->name('index');
-            Route::post('/batch', [TranslationController::class, 'translateBatch'])->name('batch');
-            Route::post('/single/{game}', [TranslationController::class, 'translateSingle'])->name('single');
-            Route::post('/game/{game}', [TranslationController::class, 'translateSingle'])->name('game');
-            Route::post('/translate-all', [TranslationController::class, 'translateAll'])->name('translate-all');
-            Route::delete('/{translation}', [TranslationController::class, 'deleteTranslation'])->name('delete');
-            Route::get('/detect-new', [TranslationController::class, 'detectNewGames'])->name('detect-new');
-            Route::post('/artisan', [TranslationController::class, 'runArtisanCommand'])->name('artisan');
-            // Rotas para sistema assíncrono  
-            Route::post('/batch/progress', [TranslationController::class, 'checkBatchProgress'])->name('batch.progress');
-            Route::get('/batch/active', [TranslationController::class, 'listActiveBatches'])->name('batch.active');
-            
-            // Rotas para atualização de descrições
-            Route::post('/descriptions/update', [TranslationController::class, 'updateAllDescriptions'])->name('descriptions.update');
-            Route::post('/descriptions/progress', [TranslationController::class, 'checkDescriptionUpdateProgress'])->name('descriptions.progress');
-            Route::get('/descriptions/stats', [TranslationController::class, 'getDescriptionStats'])->name('descriptions.stats');
-        });
-
         // Adicione esta rota:
         Route::post('/logout', function (Illuminate\Http\Request $request) {
             \Illuminate\Support\Facades\Auth::logout();
@@ -66,7 +46,7 @@ Route::middleware(['web'])->group(function () {
         })->name('logout');
 
         // Rota para atualizar a senha do usuário
-        Route::patch('/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+        Route::patch('/password', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('profile.password.update');
         Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
 
         Route::post('/profile/2fa-enable', [TwoFactorAuthenticationController::class, 'store'])->name('two-factor.enable');
@@ -101,6 +81,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/logs', [App\Http\Controllers\Admin\DashboardController::class, 'logs'])->name('logs');
     Route::get('/controls', [App\Http\Controllers\Admin\DashboardController::class, 'controls'])->name('controls');
     Route::post('/fetch-deals', [App\Http\Controllers\Admin\DashboardController::class, 'fetchDeals'])->name('fetch-deals');
+    Route::post('/fetch-free-games', [App\Http\Controllers\Admin\DashboardController::class, 'fetchFreeGames'])->name('fetch-free-games');
     Route::get('/deals/progress', [App\Http\Controllers\Admin\DashboardController::class, 'dealsProgress'])->name('deals.progress');
     
     // Rotas para limpeza de deals expirados
@@ -114,8 +95,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/system-stats', [App\Http\Controllers\Admin\DashboardController::class, 'getSystemStats'])->name('system-stats');
     
     // Rotas para monitoramento de traduções
-    Route::get('/translations/progress', [App\Http\Controllers\Admin\TranslationController::class, 'getTranslationProgress'])->name('translations.progress');
-    Route::get('/translations/critical-status', [App\Http\Controllers\Admin\TranslationController::class, 'getCriticalTranslationsStatus'])->name('translations.critical-status');
+    Route::get('/translations/progress', [TranslationController::class, 'getTranslationProgress'])->name('translations.progress');
+    Route::get('/translations/critical-status', [TranslationController::class, 'getCriticalTranslationsStatus'])->name('translations.critical-status');
+
+    // Painel de traduções (antes ficava só com auth+verified — qualquer usuário logado)
+    Route::prefix('translations')->name('translations.')->group(function () {
+        Route::get('/', [TranslationController::class, 'index'])->name('index');
+        Route::post('/batch', [TranslationController::class, 'translateBatch'])->name('batch');
+        Route::post('/single/{game}', [TranslationController::class, 'translateSingle'])->name('single');
+        Route::post('/game/{game}', [TranslationController::class, 'translateSingle'])->name('game');
+        Route::post('/translate-all', [TranslationController::class, 'translateAll'])->name('translate-all');
+        Route::delete('/{translation}', [TranslationController::class, 'deleteTranslation'])->name('delete');
+        Route::get('/detect-new', [TranslationController::class, 'detectNewGames'])->name('detect-new');
+        Route::post('/artisan', [TranslationController::class, 'runArtisanCommand'])->name('artisan');
+        Route::post('/batch/progress', [TranslationController::class, 'checkBatchProgress'])->name('batch.progress');
+        Route::get('/batch/active', [TranslationController::class, 'listActiveBatches'])->name('batch.active');
+        Route::post('/descriptions/update', [TranslationController::class, 'updateAllDescriptions'])->name('descriptions.update');
+        Route::post('/descriptions/progress', [TranslationController::class, 'checkDescriptionUpdateProgress'])->name('descriptions.progress');
+        Route::get('/descriptions/stats', [TranslationController::class, 'getDescriptionStats'])->name('descriptions.stats');
+    });
     
     // 💰 Rotas para gerenciamento de moedas
     Route::prefix('currency')->name('currency.')->group(function () {

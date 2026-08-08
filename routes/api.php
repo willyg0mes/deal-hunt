@@ -44,8 +44,7 @@ Route::middleware('auth:web')->post('/notifications/broadcast-all', function (Re
         ], 401);
     }
     
-    // Verificar se é admin
-    if (!in_array($user->email, ['admin@dealhunt.com', 'admin@test.com'])) {
+    if (! $user->is_admin) {
         return response()->json([
             'success' => false,
             'message' => 'Acesso negado. Apenas administradores podem enviar notificações para todos.',
@@ -113,11 +112,14 @@ Route::get('/health', function () {
             'database' => 'connected'
         ]);
     } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::warning('Health check failed', [
+            'message' => $e->getMessage(),
+        ]);
+
         return response()->json([
             'status' => 'error',
             'timestamp' => now()->toISOString(),
             'database' => 'disconnected',
-            'error' => $e->getMessage()
         ], 503);
     }
 });
