@@ -62,11 +62,11 @@ class CollectGameDeals extends Command
 
             $this->info("📥 Buscando página " . ($page + 1) . " (até 60 deals por página)...");
             
-            $response = Http::timeout(30)->get('https://www.cheapshark.com/api/1.0/deals', [
+            $response = \App\Support\CheapShark::http(30)->get('https://www.cheapshark.com/api/1.0/deals', [
                 'pageNumber' => $page,
                 'pageSize' => 60,
                 'upperPrice' => 200,
-                'onSale' => 1
+                'onSale' => 1,
             ]);
 
             if (!$response->successful()) {
@@ -109,7 +109,7 @@ class CollectGameDeals extends Command
                     ['external_id' => $deal['dealID']],
                     [
                         'title' => $deal['title'],
-                        'image' => $deal['thumb'] ?? 'https://via.placeholder.com/300x400?text=Game',
+                        'image' => \App\Support\CheapShark::thumbUrl($deal['thumb'] ?? null) ?? 'https://placehold.co/460x215/1a1a1a/ffffff?text=Game',
                         'store' => $deal['storeID'],
                         'store_name' => $storeMap[$deal['storeID']] ?? 'Loja Desconhecida',
                         'normal_price' => $deal['normalPrice'],

@@ -40,13 +40,14 @@ class FetchDealsCommand extends Command
                 
                 $this->info("📥 Buscando página " . ($page + 1) . "/{$totalPages} ({$currentPageSize} deals)...");
                 
-                // Buscar deals da API CheapShark
-                $response = Http::timeout(30)->get('https://www.cheapshark.com/api/1.0/deals', [
+                // Buscar deals da API CheapShark (exige User-Agent descritivo)
+                $response = \App\Support\CheapShark::http(30)->get('https://www.cheapshark.com/api/1.0/deals', [
                     'storeID' => '1,7,8,11,13,15,25,27,28,30,31,33,34,35', // Principais lojas
                     'upperPrice' => 200,
                     'pageSize' => $currentPageSize,
                     'pageNumber' => $page,
-                    'sortBy' => 'Deal Rating'
+                    'sortBy' => 'Deal Rating',
+                    'onSale' => 1,
                 ]);
 
                 if (!$response->successful()) {
@@ -82,31 +83,11 @@ class FetchDealsCommand extends Command
             foreach ($deals as $deal) {
                 $bar->advance();
 
-                // Verificar se o jogo já existe
-                $existingGame = Game::where('title', $deal['title'])->first();
-                
-                if ($existingGame) {
-                    // Atualizar preços se mudaram significativamente (diferença > 1%)
-                    $priceDiff = abs($existingGame->sale_price - (float)$deal['salePrice']);
-                    if ($priceDiff > ($existingGame->sale_price * 0.01)) {
-                        $existingGame->update([
-                            'normal_price' => (float)$deal['normalPrice'],
-                            'sale_price' => (float)$deal['salePrice'],
-                            'discount_percent' => round((float)$deal['savings']),
-                            'updated_at' => now()
-                        ]);
-                        $updated++;
-                    }
-                    continue;
-                }
+                // Preferir dealID; cair para título+loja / título
+                $existingGame = Game::where('external_id', $deal['dealID'])->first()
+                    ?? Game::where('title', $deal['title'])->where('store', (string) $deal['storeID'])->first()
+                    ?? Game::where('title', $deal['title'])->first();
 
-                // Buscar imagem melhorada via RawgService (com cache para evitar muitas chamadas)
-                $cacheKey = 'rawg_image_' . md5($deal['title']);
-                $bestImage = cache()->remember($cacheKey, 3600, function() use ($deal) {
-                    return $this->rawgService->getBestGameImage($deal['title']);
-                });
-
-                // Mapear store ID para nome
                 $storeMapping = [
                     '1' => 'Steam',
                     '7' => 'GOG',
@@ -121,25 +102,50 @@ class FetchDealsCommand extends Command
                     '31' => 'Games Republic',
                     '33' => 'GameBillet',
                     '34' => 'Voidu',
-                    '35' => 'NOCTRE'
+                    '35' => 'NOCTRE',
                 ];
 
                 $storeName = $storeMapping[$deal['storeID']] ?? 'Desconhecida';
-
-                // Criar novo jogo
-                $game = Game::create([
+                $dealUrl = 'https://www.cheapshark.com/redirect?dealID='.$deal['dealID'];
+                $payload = [
                     'title' => $deal['title'],
-                    'image' => $bestImage ?: "https://www.cheapshark.com{$deal['thumb']}",
                     'store' => $deal['storeID'],
                     'store_name' => $storeName,
-                    'normal_price' => (float)$deal['normalPrice'],
-                    'sale_price' => (float)$deal['salePrice'],
-                    'discount_percent' => round((float)$deal['savings']),
-                    'deal_url' => "https://www.cheapshark.com/redirect?dealID={$deal['dealID']}",
-                    'deal_ends_at' => now()->addDays(7), // 7 dias de validade
-                    'description' => "Oferta encontrada na {$storeName}",
+                    'normal_price' => (float) $deal['normalPrice'],
+                    'sale_price' => (float) $deal['salePrice'],
+                    'discount_percent' => round((float) $deal['savings']),
+                    'deal_url' => $dealUrl,
+                    'deal_ends_at' => now()->addDays(7),
+                    'external_id' => $deal['dealID'],
                     'is_active' => true,
-                ]);
+                ];
+
+                if ($existingGame) {
+                    // Sempre renova validade/preço — deals expirados voltam ao catálogo
+                    if (empty($existingGame->image) || str_contains((string) $existingGame->image, 'placeholder')) {
+                        $cacheKey = 'rawg_image_'.md5($deal['title']);
+                        $bestImage = cache()->remember($cacheKey, 3600, function () use ($deal) {
+                            return $this->rawgService->getBestGameImage($deal['title']);
+                        });
+                        $payload['image'] = $bestImage ?: \App\Support\CheapShark::thumbUrl($deal['thumb'] ?? null);
+                    }
+
+                    $existingGame->update($payload);
+                    $updated++;
+                    continue;
+                }
+
+                // Buscar imagem melhorada via RawgService (com cache para evitar muitas chamadas)
+                $cacheKey = 'rawg_image_'.md5($deal['title']);
+                $bestImage = cache()->remember($cacheKey, 3600, function () use ($deal) {
+                    return $this->rawgService->getBestGameImage($deal['title']);
+                });
+
+                // Criar novo jogo
+                $game = Game::create(array_merge($payload, [
+                    'image' => $bestImage ?: \App\Support\CheapShark::thumbUrl($deal['thumb'] ?? null),
+                    'description' => "Oferta encontrada na {$storeName}",
+                ]));
 
                 // Associar categorias baseadas no título
                 $this->associateCategories($game);
