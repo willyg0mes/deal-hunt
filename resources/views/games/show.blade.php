@@ -240,10 +240,14 @@ function isEnglishText($text) {
                         
                         <!-- Informações Básicas -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                            @if($game->developer)
+                            @php
+                                $headerDeveloper = $game->developer ?: ($rawgData['developers'][0]['name'] ?? null);
+                                $headerPublisher = $rawgData['publishers'][0]['name'] ?? null;
+                            @endphp
+                            @if($headerDeveloper)
                                 <div>
                                     <span class="text-gray-400 dark:text-gray-500">Desenvolvedor:</span>
-                                    <span class="text-gray-200 dark:text-gray-300 font-medium">{{ $game->developer }}</span>
+                                    <span class="text-gray-200 dark:text-gray-300 font-medium">{{ $headerDeveloper }}</span>
                                 </div>
                             @endif
                             
@@ -252,16 +256,21 @@ function isEnglishText($text) {
                                     <span class="text-gray-400 dark:text-gray-500">Lançamento:</span>
                                     <span class="text-gray-200 dark:text-gray-300 font-medium">{{ $game->release_date->format('d/m/Y') }}</span>
                                 </div>
-                            @endif
-                            
-                            @if(isset($rawgData['publishers']) && count($rawgData['publishers']) > 0)
+                            @elseif(!empty($rawgData['released']))
                                 <div>
-                                    <span class="text-gray-400 dark:text-gray-500">Editora:</span>
-                                    <span class="text-gray-200 dark:text-gray-300 font-medium">{{ $rawgData['publishers'][0]['name'] }}</span>
+                                    <span class="text-gray-400 dark:text-gray-500">Lançamento:</span>
+                                    <span class="text-gray-200 dark:text-gray-300 font-medium">{{ $rawgData['released'] }}</span>
                                 </div>
                             @endif
                             
-                            @if(isset($rawgData['playtime']))
+                            @if($headerPublisher)
+                                <div>
+                                    <span class="text-gray-400 dark:text-gray-500">Editora:</span>
+                                    <span class="text-gray-200 dark:text-gray-300 font-medium">{{ $headerPublisher }}</span>
+                                </div>
+                            @endif
+                            
+                            @if(!empty($rawgData['playtime']))
                                 <div>
                                     <span class="text-gray-400 dark:text-gray-500">Tempo de Jogo:</span>
                                     <span class="text-gray-200 dark:text-gray-300 font-medium">~{{ $rawgData['playtime'] }}h</span>
@@ -369,30 +378,36 @@ function isEnglishText($text) {
                 <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
                     <h2 class="text-2xl font-bold text-white mb-4">Sobre o Jogo</h2>
                     
-                    @if($game->description || $game->getTranslatedDescription() || (isset($rawgData['description_raw']) && $rawgData['description_raw']))
+                    @php
+                        $catalogDescription = $rawgData['description_raw'] ?? null;
+                        $translatedDesc = $game->getTranslatedDescription();
+                        $translation = $game->getTranslation('description');
+                        $hasTranslation = $translation !== null;
+                        $originalDescription = $translatedDesc
+                            ? ($game->description ?: $catalogDescription)
+                            : ($game->description && ! str_starts_with((string) $game->description, 'Oferta encontrada')
+                                ? $game->description
+                                : $catalogDescription);
+                        $originalDescription = $originalDescription ?: '';
+
+                        if ($hasTranslation && $translatedDesc) {
+                            $displayDescription = $translatedDesc;
+                            $isTranslated = true;
+                            $translationMethod = $translation->translation_method;
+                            $confidence = $translation->confidence_score;
+                        } else {
+                            $displayDescription = $originalDescription;
+                            $isTranslated = false;
+                            $translationMethod = null;
+                            $confidence = null;
+                        }
+
+                        $shortDescription = \Illuminate\Support\Str::limit($displayDescription, 500);
+                        $hasCatalogHtml = ! empty($rawgData['description_html']) && ! $isTranslated;
+                    @endphp
+
+                    @if($displayDescription || $hasCatalogHtml)
                         <div class="prose prose-invert max-w-none">
-                            @php
-                                // Prioridade: 1. Descrição traduzida, 2. Descrição original, 3. RAWG traduzida
-                                $translatedDesc = $game->getTranslatedDescription();
-                                $translation = $game->getTranslation('description');
-                                $hasTranslation = $translation !== null;
-                                $originalDescription = $game->description ?? (isset($rawgData['description_raw']) ? strip_tags($rawgData['description_raw']) : '');
-                                
-                                if ($hasTranslation && $translatedDesc) {
-                                    $displayDescription = $translatedDesc;
-                                    $isTranslated = true;
-                                    $translationMethod = $translation->translation_method;
-                                    $confidence = $translation->confidence_score;
-                                } else {
-                                    $displayDescription = $originalDescription;
-                                    $isTranslated = false;
-                                    $translationMethod = null;
-                                    $confidence = null;
-                                }
-                                
-                                $shortDescription = Str::limit($displayDescription, 500);
-                            @endphp
-                            
                             @if($isTranslated)
                                 <div class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
                                     <div class="flex items-center gap-2 mb-2">
@@ -418,92 +433,115 @@ function isEnglishText($text) {
                                         </div>
                                     @endif
                                 </div>
+                            @elseif(($rawgData['source'] ?? null) === 'steam')
+                                <div class="mb-3 text-xs text-gray-500">Detalhes via Steam Store (PT-BR)</div>
                             @endif
-                            
-                            <p class="text-gray-300 dark:text-gray-400 leading-relaxed mb-4">
-                                {{ $shortDescription }}
-                            </p>
-                            
-                            @if(strlen($displayDescription) > 500)
-                                <div id="full-description" class="hidden">
-                                    <p class="text-gray-300 dark:text-gray-400 leading-relaxed">
-                                        {{ $displayDescription }}
-                                    </p>
+
+                            @if($hasCatalogHtml)
+                                <div class="steam-description text-gray-300 dark:text-gray-400 leading-relaxed mb-4 space-y-3 [&_img]:rounded-lg [&_img]:max-w-full">
+                                    {!! $rawgData['description_html'] !!}
                                 </div>
-                                <button onclick="toggleDescription()" 
-                                        class="text-red-400 hover:text-red-300 font-medium" 
-                                        id="description-toggle">
-                                    Ler mais
-                                </button>
-                            @endif
-                            
-                            @if($hasTranslation && $originalDescription !== $displayDescription)
-                                <div class="mt-4">
-                                    <button onclick="toggleOriginalDescription()" 
-                                            class="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
-                                            id="original-toggle">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                                        </svg>
-                                        Ver texto original em inglês
-                                    </button>
-                                    <div id="original-description" class="hidden mt-3 p-4 bg-gray-800/30 rounded-lg border border-gray-600/30">
-                                        <p class="text-gray-400 text-sm italic leading-relaxed">
-                                            {{ $originalDescription }}
+                            @else
+                                <p class="text-gray-300 dark:text-gray-400 leading-relaxed mb-4 whitespace-pre-line">
+                                    {{ $shortDescription }}
+                                </p>
+
+                                @if(strlen($displayDescription) > 500)
+                                    <div id="full-description" class="hidden">
+                                        <p class="text-gray-300 dark:text-gray-400 leading-relaxed whitespace-pre-line">
+                                            {{ $displayDescription }}
                                         </p>
                                     </div>
-                                </div>
+                                    <button type="button" onclick="toggleDescription()"
+                                            class="text-red-400 hover:text-red-300 font-medium"
+                                            id="description-toggle">
+                                        Ler mais
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     @else
                         <div class="bg-gray-700/30 rounded-lg p-6 text-center">
-                            <svg class="w-12 h-12 text-gray-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <p class="text-gray-400 dark:text-gray-500 mb-2">Descrição não disponível para este jogo.</p>
-                            <p class="text-gray-500 dark:text-gray-600 text-sm">As traduções são processadas automaticamente em segundo plano.</p>
+                            <p class="text-gray-400 dark:text-gray-500 mb-2">Descrição ainda não disponível para este jogo.</p>
+                            <p class="text-gray-500 dark:text-gray-600 text-sm">Pode ser um título sem página Steam correspondente.</p>
                         </div>
                     @endif
                     
-                    <!-- Categorias -->
-                    @if($game->categories->isNotEmpty())
+                    <!-- Categorias / gêneros -->
+                    @php
+                        $genreNames = $game->categories->pluck('name');
+                        if ($genreNames->isEmpty() && !empty($rawgData['genres'])) {
+                            $genreNames = collect($rawgData['genres'])->pluck('name')->filter();
+                        }
+                    @endphp
+                    @if($genreNames->isNotEmpty())
                         <div class="mt-6">
                             <h3 class="text-lg font-semibold text-white mb-3">Gêneros</h3>
                             <div class="flex flex-wrap gap-2">
-                                @foreach($game->categories as $category)
+                                @foreach($genreNames as $genreName)
                                     <span class="bg-gray-700/80 dark:bg-gray-700/60 text-gray-200 dark:text-gray-300 px-3 py-1 rounded-lg text-sm backdrop-blur-sm border border-gray-600/30">
-                                        {{ $category->name }}
+                                        {{ translateGenre($genreName) }}
                                     </span>
                                 @endforeach
                             </div>
                         </div>
                     @endif
                     
-                    <!-- Plataformas (do RAWG) -->
+                    <!-- Plataformas (do catálogo) -->
                     @if(isset($rawgData['platforms']) && count($rawgData['platforms']) > 0)
                         <div class="mt-6">
                             <h3 class="text-lg font-semibold text-white mb-3">Plataformas</h3>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($rawgData['platforms'] as $platform)
                                     <span class="bg-blue-600/20 dark:bg-blue-600/30 text-blue-300 dark:text-blue-400 px-3 py-1 rounded-lg text-sm border border-blue-500/30">
-                                        {{ translatePlatform($platform['platform']['name']) }}
+                                        {{ translatePlatform($platform['platform']['name'] ?? '') }}
                                     </span>
                                 @endforeach
                             </div>
                         </div>
                     @endif
                 </div>
+
+                <!-- Trailers / vídeos -->
+                @if(!empty($rawgData['movies']))
+                    <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
+                        <h2 class="text-2xl font-bold text-white mb-4">Trailers</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            @foreach(array_slice($rawgData['movies'], 0, 3) as $movie)
+                                <div class="rounded-xl overflow-hidden border border-gray-700/50 bg-black">
+                                    <video
+                                        class="w-full aspect-video bg-black"
+                                        controls
+                                        preload="metadata"
+                                        @if(!empty($movie['poster'])) poster="{{ $movie['poster'] }}" @endif
+                                    >
+                                        @if(!empty($movie['mp4']))
+                                            <source src="{{ $movie['mp4'] }}" type="video/mp4">
+                                        @endif
+                                        @if(!empty($movie['webm']))
+                                            <source src="{{ $movie['webm'] }}" type="video/webm">
+                                        @endif
+                                    </video>
+                                    @if(!empty($movie['name']))
+                                        <div class="px-3 py-2 text-sm text-gray-300">{{ $movie['name'] }}</div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
                 
                 <!-- Screenshots -->
                 @if(isset($rawgData['screenshots']) && count($rawgData['screenshots']) > 0)
                     <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
                         <h2 class="text-2xl font-bold text-white mb-4">Capturas de Tela</h2>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            @foreach(array_slice($rawgData['screenshots'], 0, 6) as $screenshot)
+                            @foreach(array_slice($rawgData['screenshots'], 0, 8) as $screenshot)
                                 <div class="relative group cursor-pointer" onclick="openImageModal('{{ $screenshot['image'] }}')">
-                                    <img src="{{ $screenshot['image'] }}" 
-                                         alt="Screenshot" 
-                                         class="w-full h-48 object-cover rounded-lg transition-transform group-hover:scale-105" />
+                                    <img src="{{ $screenshot['image'] }}"
+                                         alt="Screenshot de {{ $game->title }}"
+                                         loading="lazy"
+                                         class="w-full h-48 object-cover rounded-lg transition-transform group-hover:scale-[1.02]" />
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
                                         <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
@@ -513,8 +551,7 @@ function isEnglishText($text) {
                             @endforeach
                         </div>
                     </div>
-                @endif
-                
+                @endif                
                 <!-- Outras Ofertas -->
                 @if(isset($relatedOffers) && $relatedOffers->isNotEmpty())
                     <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
@@ -558,66 +595,120 @@ function isEnglishText($text) {
                 <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
                     <h3 class="text-xl font-bold text-white mb-4">Especificações</h3>
                     <div class="space-y-3 text-sm">
-                        
-                        @if($game->developer)
-                            <div class="flex justify-between">
-                                <span class="text-gray-400 dark:text-gray-500">Desenvolvedor:</span>
-                                <span class="text-gray-200 dark:text-gray-300 text-right">{{ $game->developer }}</span>
+                        @php
+                            $specDeveloper = $game->developer ?: ($rawgData['developers'][0]['name'] ?? null);
+                            $specPublisher = $rawgData['publishers'][0]['name'] ?? null;
+                            $specReleased = $rawgData['released'] ?? null;
+                            $specMetacritic = $game->metacritic ?: ($rawgData['metacritic'] ?? null);
+                            $hasAnySpec = $specDeveloper || $specPublisher || $game->release_date || $specReleased
+                                || !empty($rawgData['esrb_rating']['name']) || !empty($rawgData['playtime'])
+                                || $specMetacritic || !empty($rawgData['website']) || !empty($rawgData['genres']);
+                        @endphp
+
+                        @if($specDeveloper)
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-400 dark:text-gray-500 shrink-0">Desenvolvedor:</span>
+                                <span class="text-gray-200 dark:text-gray-300 text-right">{{ $specDeveloper }}</span>
                             </div>
                         @endif
-                        
-                        @if(isset($rawgData['publishers']) && count($rawgData['publishers']) > 0)
-                            <div class="flex justify-between">
-                                <span class="text-gray-400 dark:text-gray-500">Editora:</span>
-                                <span class="text-gray-200 dark:text-gray-300 text-right">{{ $rawgData['publishers'][0]['name'] }}</span>
+
+                        @if($specPublisher)
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-400 dark:text-gray-500 shrink-0">Editora:</span>
+                                <span class="text-gray-200 dark:text-gray-300 text-right">{{ $specPublisher }}</span>
                             </div>
                         @endif
-                        
+
                         @if($game->release_date)
-                            <div class="flex justify-between">
+                            <div class="flex justify-between gap-3">
                                 <span class="text-gray-400 dark:text-gray-500">Lançamento:</span>
                                 <span class="text-gray-200 dark:text-gray-300">{{ $game->release_date->format('d/m/Y') }}</span>
                             </div>
+                        @elseif($specReleased)
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-400 dark:text-gray-500">Lançamento:</span>
+                                <span class="text-gray-200 dark:text-gray-300 text-right">{{ $specReleased }}</span>
+                            </div>
                         @endif
-                        
+
+                        @if($specMetacritic)
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-400 dark:text-gray-500">Metacritic:</span>
+                                <span class="text-gray-200 dark:text-gray-300 font-semibold">{{ $specMetacritic }}</span>
+                            </div>
+                        @endif
+
+                        @if(!empty($rawgData['genres']))
+                            <div class="flex justify-between gap-3">
+                                <span class="text-gray-400 dark:text-gray-500 shrink-0">Gêneros:</span>
+                                <span class="text-gray-200 dark:text-gray-300 text-right">
+                                    {{ collect($rawgData['genres'])->pluck('name')->filter()->take(4)->implode(', ') }}
+                                </span>
+                            </div>
+                        @endif
+
                         @if(isset($rawgData['esrb_rating']['name']))
-                            <div class="flex justify-between">
+                            <div class="flex justify-between gap-3">
                                 <span class="text-gray-400 dark:text-gray-500">Classificação:</span>
                                 <span class="text-gray-200 dark:text-gray-300">{{ translateESRBRating($rawgData['esrb_rating']['name']) }}</span>
                             </div>
                         @endif
-                        
-                        @if(isset($rawgData['playtime']))
-                            <div class="flex justify-between">
+
+                        @if(!empty($rawgData['playtime']))
+                            <div class="flex justify-between gap-3">
                                 <span class="text-gray-400 dark:text-gray-500">Tempo Médio:</span>
                                 <span class="text-gray-200 dark:text-gray-300">{{ $rawgData['playtime'] }} horas</span>
                             </div>
                         @endif
-                        
-                        @if(isset($rawgData['website']))
+
+                        @if(!empty($rawgData['website']))
                             <div class="pt-2">
-                                <a href="{{ $rawgData['website'] }}" target="_blank" 
-                                   class="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                                    </svg>
-                                    Site Oficial
+                                <a href="{{ $rawgData['website'] }}" target="_blank" rel="noopener"
+                                   class="text-red-400 hover:text-red-300 text-sm underline underline-offset-2">
+                                    Site oficial
                                 </a>
                             </div>
                         @endif
+
+                        @if(! $hasAnySpec)
+                            <p class="text-gray-500 text-sm">Sem especificação catalogada para este título ainda.</p>
+                        @endif
                     </div>
                 </div>
+
+                @if(!empty($rawgData['pc_requirements']['minimum']) || !empty($rawgData['pc_requirements']['recommended']))
+                    <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
+                        <h3 class="text-xl font-bold text-white mb-4">Requisitos (PC)</h3>
+                        <div class="space-y-4 text-sm text-gray-300 steam-requirements [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:text-white">
+                            @if(!empty($rawgData['pc_requirements']['minimum']))
+                                <div>
+                                    <h4 class="text-white font-semibold mb-2">Mínimos</h4>
+                                    {!! $rawgData['pc_requirements']['minimum'] !!}
+                                </div>
+                            @endif
+                            @if(!empty($rawgData['pc_requirements']['recommended']))
+                                <div>
+                                    <h4 class="text-white font-semibold mb-2">Recomendados</h4>
+                                    {!! $rawgData['pc_requirements']['recommended'] !!}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
                 
                 <!-- Jogos Similares -->
                 @if(isset($similarGames) && $similarGames->isNotEmpty())
                     <div class="bg-gray-800/50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-600/30">
-                        <h3 class="text-xl font-bold text-white mb-4">Jogos Similares</h3>
+                        <h3 class="text-xl font-bold text-white mb-1">Jogos Similares</h3>
+                        <p class="text-xs text-gray-500 mb-4">Com gêneros em comum</p>
                         <div class="space-y-3">
-                            @foreach($similarGames->take(4) as $similar)
-                                <a href="{{ route('games.show', $similar) }}" 
+                            @foreach($similarGames->take(6) as $similar)
+                                <a href="{{ route('games.show', $similar) }}"
                                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/30 dark:hover:bg-gray-800/30 transition group">
-                                    <img src="{{ $similar->optimized_image }}" alt="{{ $similar->title }}" 
-                                         class="w-20 h-[38px] object-cover object-center rounded shrink-0" />
+                                    <img src="{{ $similar->optimized_image }}" alt="{{ $similar->title }}"
+                                         class="w-24 h-[45px] object-cover object-center rounded shrink-0"
+                                         loading="lazy"
+                                         onerror="this.onerror=null; this.src='{{ $similar->placeholderCoverUrl() }}';" />
                                     <div class="flex-1 min-w-0">
                                         <h4 class="font-medium text-white group-hover:text-red-400 transition truncate">
                                             {{ $similar->title }}
@@ -628,13 +719,17 @@ function isEnglishText($text) {
                                                 <span class="text-red-400">-{{ $similar->discount_percent }}%</span>
                                             @endif
                                         </div>
+                                        @if($similar->categories->isNotEmpty())
+                                            <div class="text-[10px] text-gray-500 truncate mt-0.5">
+                                                {{ $similar->categories->take(2)->pluck('name')->implode(' · ') }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </a>
                             @endforeach
                         </div>
                     </div>
-                @endif
-            </div>
+                @endif            </div>
         </div>
     </div>
 </div>

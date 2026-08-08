@@ -153,6 +153,7 @@ class RawgService
 
     /**
      * Busca detalhes completos de um jogo (cache 12h; falhas 15min).
+     * Timeout curto: na VPS a RAWG costuma falhar; Steam é a fonte preferencial.
      */
     public function getGameDetails(string $title): ?array
     {
@@ -182,8 +183,12 @@ class RawgService
      */
     private function fetchGameDetails(string $title): ?array
     {
+        if (empty($this->apiKey)) {
+            return null;
+        }
+
         try {
-            $response = Http::timeout(3)->get('https://api.rawg.io/api/games', [
+            $response = Http::timeout(4)->get('https://api.rawg.io/api/games', [
                 'search' => $title,
                 'key' => $this->apiKey,
                 'page_size' => 1,
@@ -201,7 +206,7 @@ class RawgService
             }
 
             $gameId = $game['id'];
-            $detailsResponse = Http::timeout(3)->get("https://api.rawg.io/api/games/{$gameId}", [
+            $detailsResponse = Http::timeout(4)->get("https://api.rawg.io/api/games/{$gameId}", [
                 'key' => $this->apiKey,
             ]);
 
@@ -212,18 +217,34 @@ class RawgService
             }
 
             $details = $detailsResponse->json();
+            $details['source'] = 'rawg';
 
             if (empty($details['description_raw']) && ! empty($details['description'])) {
                 $details['description_raw'] = strip_tags($details['description']);
             }
 
-            $screenshotsResponse = Http::timeout(5)->get("https://api.rawg.io/api/games/{$gameId}/screenshots", [
+            $screenshotsResponse = Http::timeout(4)->get("https://api.rawg.io/api/games/{$gameId}/screenshots", [
                 'key' => $this->apiKey,
-                'page_size' => 6,
+                'page_size' => 8,
             ]);
 
             if ($screenshotsResponse->successful()) {
                 $details['screenshots'] = $screenshotsResponse->json('results') ?? [];
+            }
+
+            $moviesResponse = Http::timeout(4)->get("https://api.rawg.io/api/games/{$gameId}/movies", [
+                'key' => $this->apiKey,
+            ]);
+
+            if ($moviesResponse->successful()) {
+                $details['movies'] = collect($moviesResponse->json('results') ?? [])->map(function ($movie) {
+                    return [
+                        'name' => $movie['name'] ?? 'Trailer',
+                        'poster' => $movie['preview'] ?? null,
+                        'mp4' => $movie['data']['max'] ?? ($movie['data']['480'] ?? null),
+                        'webm' => null,
+                    ];
+                })->filter(fn ($m) => ! empty($m['mp4']))->values()->all();
             }
 
             return $details;
