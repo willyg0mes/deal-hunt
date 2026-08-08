@@ -23,6 +23,9 @@ class CollectGameDeals extends Command
         $total = 0;
         $processed = 0;
         $updated = 0;
+        $maxPages = 100; // Limite máximo de páginas para evitar loops infinitos
+        $consecutiveErrors = 0;
+        $maxConsecutiveErrors = 3;
         $rawg = new RawgService();
         
         // Mapeamento de storeID para nomes legíveis
@@ -51,6 +54,12 @@ class CollectGameDeals extends Command
         ];
 
         do {
+            // Verificar limite máximo de páginas
+            if ($page >= $maxPages) {
+                $this->warn("Limite máximo de {$maxPages} páginas alcançado. Finalizando coleta.");
+                break;
+            }
+
             $this->info("📥 Buscando página " . ($page + 1) . " (até 60 deals por página)...");
             
             $response = Http::timeout(30)->get('https://www.cheapshark.com/api/1.0/deals', [
@@ -61,9 +70,23 @@ class CollectGameDeals extends Command
             ]);
 
             if (!$response->successful()) {
+                $consecutiveErrors++;
                 $this->error("Falha ao buscar página " . ($page + 1) . " da API CheapShark");
+                $this->error("Status: " . $response->status() . " - " . $response->body());
+
+                // Se for rate limiting (429) ou erro do servidor (5xx), tentar novamente
+                if (($response->status() === 429 || $response->status() >= 500) && $consecutiveErrors < $maxConsecutiveErrors) {
+                    $this->warn("Tentando novamente em 30 segundos... (Tentativa {$consecutiveErrors}/{$maxConsecutiveErrors})");
+                    sleep(30);
+                    continue;
+                }
+
+                $this->error("Máximo de erros consecutivos ({$maxConsecutiveErrors}) alcançado. Finalizando coleta.");
                 break;
             }
+
+            // Resetar contador de erros se a página foi processada com sucesso
+            $consecutiveErrors = 0;
 
             $deals = $response->json();
 
@@ -167,12 +190,12 @@ class CollectGameDeals extends Command
             
             $page++;
             
-            // Pausa entre páginas para evitar rate limiting
+            // Pausa entre páginas para evitar rate limiting (aumentado para 2 segundos)
             if (!empty($deals)) {
-                sleep(1);
+                sleep(2);
             }
             
-        } while (!empty($deals));
+        } while (!empty($deals) && $page < $maxPages && $consecutiveErrors < $maxConsecutiveErrors);
 
         $this->newLine();
         $this->table(['Estatística', 'Quantidade'], [

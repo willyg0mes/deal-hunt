@@ -11,8 +11,10 @@ use Illuminate\Support\Str;
 
 class FetchDealsCommand extends Command
 {
-    protected $signature = 'games:fetch-deals {--limit=100 : Number of deals to fetch (default: 100, max: 3000)}';
-    protected $description = 'Fetch game deals from CheapShark API with improved images';
+    protected $signature = 'games:fetch-deals 
+                            {--limit=100 : Number of deals to fetch (default: 100, max: 3000)} 
+                            {--free=30 : Number of permanently free games to fetch from RAWG (0 = skip)}';
+    protected $description = 'Fetch game deals from CheapShark API and optionally free-to-play games from RAWG';
 
     public function __construct(protected RawgService $rawgService)
     {
@@ -148,13 +150,91 @@ class FetchDealsCommand extends Command
             $bar->finish();
             $this->newLine();
 
+            $freeProcessed = 0;
+            $freeLimit = (int) $this->option('free');
+            if ($freeLimit > 0) {
+                $this->info("🆓 Buscando até {$freeLimit} jogos gratuitos permanentes (RAWG)...");
+                $pageSize = 20;
+                $freeCollected = 0;
+                $page = 1;
+                while ($freeCollected < $freeLimit) {
+                    $toFetch = min($pageSize, $freeLimit - $freeCollected);
+                    $freeGames = $this->rawgService->getFreeToPlayGames($toFetch, $page);
+                    if (empty($freeGames)) {
+                        break;
+                    }
+                    foreach ($freeGames as $fg) {
+                        if ($freeCollected >= $freeLimit) {
+                            break;
+                        }
+                        $title = $fg['name'] ?? '';
+                        if (empty($title)) {
+                            continue;
+                        }
+                        $existing = Game::where('title', $title)->first();
+                        if ($existing) {
+                            if (!$existing->is_free_permanently) {
+                                $existing->update([
+                                    'is_free_permanently' => true,
+                                    'free_since' => $existing->free_since ?? now(),
+                                    'normal_price' => 0,
+                                    'sale_price' => 0,
+                                    'discount_percent' => 0,
+                                    'deal_ends_at' => null,
+                                    'updated_at' => now(),
+                                ]);
+                                $freeProcessed++;
+                            }
+                            $freeCollected++;
+                            continue;
+                        }
+                        $image = $fg['background_image'] ?? null;
+                        $slug = $fg['slug'] ?? null;
+                        $rawgId = $fg['id'] ?? null;
+                        $storeUrl = null;
+                        if ($rawgId) {
+                            usleep(300000); // 0.3s entre chamadas à API de lojas
+                            $storeUrl = $this->rawgService->getGameStoreUrl($rawgId);
+                        }
+                        if (!$storeUrl && $slug) {
+                            $storeUrl = "https://rawg.io/games/{$slug}";
+                        }
+                        $game = Game::create([
+                            'title' => $title,
+                            'image' => $image ?? 'https://via.placeholder.com/460x215/1a1a1a/ffffff?text=' . urlencode($title),
+                            'store' => 0,
+                            'store_name' => 'Free to Play',
+                            'normal_price' => 0,
+                            'sale_price' => 0,
+                            'discount_percent' => 0,
+                            'deal_url' => $storeUrl,
+                            'deal_ends_at' => null,
+                            'description' => 'Jogo gratuito permanente (Free to Play).',
+                            'is_active' => true,
+                            'is_free_permanently' => true,
+                            'free_since' => now(),
+                        ]);
+                        $this->associateCategories($game);
+                        $freeProcessed++;
+                        $freeCollected++;
+                    }
+                    $page++;
+                    if (count($freeGames) < $pageSize) {
+                        break;
+                    }
+                    sleep(1);
+                }
+                $this->info("✅ {$freeProcessed} jogos gratuitos processados.");
+            }
+
             $this->table(['Estatística', 'Quantidade'], [
-                ['Jogos processados', $processed],
-                ['Jogos atualizados', $updated],
+                ['Deals processados', $processed],
+                ['Deals atualizados', $updated],
+                ['Jogos gratuitos (novos/atualizados)', $freeProcessed],
                 ['Total de jogos', Game::count()],
             ]);
 
-            $this->info('✅ Busca de deals concluída com sucesso!');
+            $this->info('✅ Busca de deals e jogos gratuitos concluída com sucesso!');
             return 0;
 
         } catch (\Exception $e) {

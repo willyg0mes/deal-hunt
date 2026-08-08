@@ -9,11 +9,11 @@ use Illuminate\Support\Str;
 
 class RawgService
 {
-    protected string $apiKey;
+    protected ?string $apiKey;
 
     public function __construct()
     {
-        $this->apiKey = config('services.rawg.key'); // chave no .env
+        $this->apiKey = config('services.rawg.key'); // chave no .env (pode ser null)
     }
 
     public function searchGame(string $title): ?array
@@ -236,6 +236,64 @@ class RawgService
     {
         $encodedTitle = urlencode($title);
         return "https://via.placeholder.com/460x215/1a1a1a/ffffff?text=" . $encodedTitle;
+    }
+
+    /**
+     * Lista jogos free-to-play (gratuitos permanentes) da RAWG.
+     * Retorna array de jogos com id, name, slug, background_image, etc.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getFreeToPlayGames(int $pageSize = 20, int $page = 1): array
+    {
+        try {
+            $response = Http::timeout(15)->get('https://api.rawg.io/api/games', [
+                'key' => $this->apiKey,
+                'tags' => 'free-to-play',
+                'page_size' => min($pageSize, 40),
+                'page' => $page,
+                'ordering' => '-rating',
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('RawgService getFreeToPlayGames: HTTP ' . $response->status());
+                return [];
+            }
+
+            $data = $response->json();
+            return $data['results'] ?? [];
+        } catch (\Exception $e) {
+            Log::warning('RawgService getFreeToPlayGames: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Retorna a URL da loja (Steam, etc.) para um jogo RAWG, se disponível.
+     */
+    public function getGameStoreUrl(int $rawgGameId): ?string
+    {
+        try {
+            $response = Http::timeout(5)->get("https://api.rawg.io/api/games/{$rawgGameId}/stores", [
+                'key' => $this->apiKey,
+            ]);
+            if (!$response->successful()) {
+                return null;
+            }
+            $results = $response->json('results');
+            if (empty($results)) {
+                return null;
+            }
+            // Priorizar Steam (store_id 1), depois primeira loja disponível
+            foreach ($results as $item) {
+                if (($item['store_id'] ?? 0) === 1 && !empty($item['url'])) {
+                    return $item['url'];
+                }
+            }
+            return $results[0]['url'] ?? null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

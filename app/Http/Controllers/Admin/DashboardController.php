@@ -112,21 +112,25 @@ class DashboardController extends Controller
             }
         }
 
-        // Busca limitada usando games:fetch-deals
+        // Busca limitada usando games:fetch-deals (+ opcional: jogos gratuitos permanentes)
         $request->validate([
-            'limit' => 'required|integer|min:50|max:3000'
+            'limit' => 'required|integer|min:50|max:3000',
+            'free' => 'nullable|integer|min:0|max:200',
         ]);
 
         $limit = $request->get('limit', 100);
+        $free = $request->get('free', 30); // padrão: buscar 30 jogos gratuitos
 
         AdminLog::log('manual_fetch_deals', null, null, [
-            'limit' => $limit
+            'limit' => $limit,
+            'free' => $free,
         ]);
 
         try {
-            // Executar o comando real de busca de deals
+            // Executar o comando real de busca de deals e jogos gratuitos
             Artisan::call('games:fetch-deals', [
-                '--limit' => $limit
+                '--limit' => $limit,
+                '--free' => $free,
             ]);
             
             $output = Artisan::output();
@@ -145,13 +149,21 @@ class DashboardController extends Controller
             if (preg_match('/Jogos atualizados\s+\|\s+(\d+)/', $output, $matches)) {
                 $updatedCount = $matches[1];
             }
-            
+            $freeCount = 0;
+            if (preg_match('/(\d+) jogos gratuitos processados/', $output, $matches)) {
+                $freeCount = (int) $matches[1];
+            }
+            $message = "Busca limitada concluída! {$pagesCount} requisições feitas, {$processedCount} deals coletados, {$updatedCount} jogos atualizados.";
+            if ($freeCount > 0) {
+                $message .= " {$freeCount} jogos gratuitos permanentes processados.";
+            }
             return response()->json([
                 'success' => true,
-                'message' => "Busca limitada concluída! {$pagesCount} requisições feitas, {$processedCount} deals coletados, {$updatedCount} jogos atualizados.",
+                'message' => $message,
                 'processed' => $processedCount,
                 'updated' => $updatedCount,
                 'pages' => $pagesCount,
+                'free_processed' => $freeCount,
                 'total_games' => Game::count(),
                 'output' => $output
             ]);
@@ -160,6 +172,56 @@ class DashboardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => "Erro ao executar busca: " . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Buscar apenas jogos gratuitos permanentes (RAWG Free to Play).
+     */
+    public function fetchFreeGames(Request $request)
+    {
+        $request->validate([
+            'limit' => 'nullable|integer|min:10|max:200',
+        ]);
+        $limit = $request->get('limit', 80);
+
+        if (empty(config('services.rawg.key'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RAWG_API_KEY não está configurada no .env do servidor. Configure para buscar jogos gratuitos.',
+            ], 400);
+        }
+
+        try {
+            AdminLog::log('fetch_free_games', null, null, ['limit' => $limit]);
+        } catch (\Throwable $e) {
+            // segue mesmo se log falhar
+        }
+
+        try {
+            $exitCode = Artisan::call('games:fetch-free', ['--limit' => $limit]);
+            $output = Artisan::output();
+            $freeCount = Game::free()->count();
+            if ($exitCode !== 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A busca retornou erros. Verifique se RAWG_API_KEY está correta. ' . trim($output),
+                    'free_count' => $freeCount,
+                    'output' => $output,
+                ], 200);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => "Jogos gratuitos atualizados. Total de jogos gratuitos permanentes: {$freeCount}.",
+                'free_count' => $freeCount,
+                'total_games' => Game::count(),
+                'output' => $output,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao buscar jogos gratuitos: ' . $e->getMessage(),
             ], 500);
         }
     }
