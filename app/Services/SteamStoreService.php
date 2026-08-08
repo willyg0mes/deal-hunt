@@ -143,9 +143,22 @@ class SteamStoreService
         foreach ($data['movies'] ?? [] as $movie) {
             $mp4 = $movie['mp4']['max'] ?? $movie['mp4']['480'] ?? null;
             $webm = $movie['webm']['max'] ?? $movie['webm']['480'] ?? null;
+            $movieId = $movie['id'] ?? null;
+
+            // API nova (só HLS/DASH): reconstrói MP4/WebM clássicos do CDN
+            if ((! $mp4 || ! $webm) && $movieId) {
+                $mp4 = $mp4 ?: "https://cdn.cloudflare.steamstatic.com/steam/apps/{$movieId}/movie_max.mp4";
+                $webm = $webm ?: "https://cdn.cloudflare.steamstatic.com/steam/apps/{$movieId}/movie_max.webm";
+            }
+
+            if (! $mp4 && ! $webm && ! empty($movie['hls_h264'])) {
+                $mp4 = $movie['hls_h264'];
+            }
+
             if (! $mp4 && ! $webm) {
                 continue;
             }
+
             $movies[] = [
                 'name' => $movie['name'] ?? 'Trailer',
                 'poster' => $movie['thumbnail'] ?? null,
