@@ -219,33 +219,73 @@ class Game extends Model
     }
 
     /**
-     * Retorna a URL da imagem otimizada para melhor qualidade
+     * Capa otimizada no formato Steam header (460×215).
+     * Promove capsules ruins e alinha crops RAWG ao card.
      */
-    public function getOptimizedImageAttribute()
+    public function getOptimizedImageAttribute(): string
     {
         if (empty($this->image)) {
-            return 'https://via.placeholder.com/600x400/1a1a1a/ffffff?text=' . urlencode($this->title);
+            return $this->placeholderCoverUrl();
         }
 
-        $imageUrl = $this->image;
+        $imageUrl = trim((string) $this->image);
 
-        // Se for imagem do RAWG, melhorar a resolução
+        // CheapShark / Steam CDN: capsule minúscula → header oficial 460×215
+        if ($steamHeader = $this->promoteSteamCoverUrl($imageUrl)) {
+            return $steamHeader;
+        }
+
+        // RAWG: crop no mesmo aspect do card
         if (str_contains($imageUrl, 'media.rawg.io')) {
-            // Remover parâmetros de crop pequenos e usar tamanho maior
-            $imageUrl = preg_replace('/\/crop\/\d+\/\d+\//', '/crop/600/400/', $imageUrl);
-            // Remover scale-to-fit-down para permitir imagens maiores
+            $imageUrl = preg_replace('#/crop/\d+/\d+/#', '/crop/460/215/', $imageUrl) ?? $imageUrl;
             $imageUrl = str_replace('/scale-to-fit-down/', '/scale-to-fit/', $imageUrl);
-            // Garantir que não está usando thumbnail
             $imageUrl = str_replace('/thumb/', '/', $imageUrl);
         }
 
-        // Se for imagem do Steam, tentar melhorar
-        if (str_contains($imageUrl, 'steamcdn-a.akamaihd.net') || str_contains($imageUrl, 'steamstatic.com')) {
-            // Remover parâmetros de tamanho se existirem
-            $imageUrl = preg_replace('/\?.*$/', '', $imageUrl);
+        return $imageUrl;
+    }
+
+    public function placeholderCoverUrl(): string
+    {
+        return 'https://via.placeholder.com/460x215/1a1a1a/ffffff?text='.urlencode((string) $this->title);
+    }
+
+    /**
+     * Converte URLs Steam (capsule/tiny) no header padrão da loja.
+     */
+    protected function promoteSteamCoverUrl(string $url): ?string
+    {
+        $hosts = [
+            'steamcdn-a.akamaihd.net',
+            'steamstatic.com',
+            'shared.akamai.steamstatic.com',
+            'cdn.cloudflare.steamstatic.com',
+            'cdn.akamai.steamstatic.com',
+            'cheapshark.com',
+        ];
+
+        $isSteamish = false;
+        foreach ($hosts as $host) {
+            if (str_contains($url, $host)) {
+                $isSteamish = true;
+                break;
+            }
         }
 
-        return $imageUrl;
+        if (! $isSteamish && ! str_contains($url, '/steam/apps/')) {
+            return null;
+        }
+
+        if (preg_match('#/steam/apps/(\d+)/#i', $url, $matches)) {
+            return 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/'.$matches[1].'/header.jpg';
+        }
+
+        // Tiny image style: .../apps/123/header_... or capsule with app id elsewhere
+        if (preg_match('#apps/(\d+)#i', $url, $matches)) {
+            return 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/'.$matches[1].'/header.jpg';
+        }
+
+        return null;
     }
 
     /**

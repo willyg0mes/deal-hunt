@@ -4,7 +4,7 @@
 @section('meta_description', \Illuminate\Support\Str::limit(strip_tags($game->getBestDescription($rawgData) ?: ($game->title.' com desconto na '.($game->store_name ?: 'loja digital').'. Confira no DealHunt.')), 160))
 @section('canonical', route('games.show', $game))
 @section('og_type', 'product')
-@section('og_image', $game->image ?: (($rawgData['background_image'] ?? null) ?: asset('favicon.ico')))
+@section('og_image', $game->optimized_image ?: (($rawgData['background_image'] ?? null) ?: asset('favicon.ico')))
 
 @section('content')
 @php
@@ -189,13 +189,15 @@ function isEnglishText($text) {
         <div class="bg-gradient-to-br from-gray-800 via-red-900/30 to-red-800/30 dark:from-gray-800 dark:via-gray-700 dark:to-gray-900 rounded-2xl shadow-lg p-6 sm:p-8 mb-8">
             <div class="flex flex-col xl:flex-row gap-8">
                 
-                <!-- Imagem Principal -->
-                <div class="flex justify-center xl:justify-start">
-                    <div class="relative">
-                        <img src="{{ $game->image }}" alt="{{ $game->title }}" 
-                             class="w-80 h-80 object-cover rounded-xl shadow-lg border border-gray-600/50" />
+                <!-- Capa (aspect Steam header 460×215) -->
+                <div class="flex justify-center xl:justify-start xl:w-[min(100%,28rem)] shrink-0">
+                    <div class="relative w-full max-w-md xl:max-w-none aspect-[460/215] overflow-hidden rounded-xl shadow-lg border border-gray-600/50 bg-gray-950">
+                        <img src="{{ $game->optimized_image }}" alt="{{ $game->title }}"
+                             class="absolute inset-0 w-full h-full object-cover object-center"
+                             width="460" height="215"
+                             onerror="this.onerror=null; this.src='{{ $game->placeholderCoverUrl() }}';" />
                         @if($game->discount_percent > 0)
-                            <div class="absolute top-4 right-4 bg-red-600 dark:bg-red-500 text-white text-lg font-bold px-4 py-2 rounded-lg shadow">
+                            <div class="absolute top-3 right-3 bg-red-600 text-white text-sm font-bold px-3 py-1.5 rounded-lg shadow">
                                 -{{ $game->discount_percent }}%
                             </div>
                         @endif
@@ -521,8 +523,8 @@ function isEnglishText($text) {
                             @foreach($relatedOffers as $offer)
                                 <div class="flex items-center justify-between p-4 bg-gray-700/30 dark:bg-gray-800/30 rounded-lg border border-gray-600/20">
                                     <div class="flex items-center gap-4">
-                                        <img src="{{ $offer->image }}" alt="{{ $offer->title }}" 
-                                             class="w-16 h-16 object-cover rounded-lg" />
+                                        <img src="{{ $offer->optimized_image }}" alt="{{ $offer->title }}" 
+                                             class="w-24 h-[45px] object-cover object-center rounded-lg shrink-0" />
                                         <div>
                                             <h3 class="font-semibold text-white">{{ $offer->title }}</h3>
                                             <p class="text-sm text-gray-400 dark:text-gray-500">{{ $offer->store_name }}</p>
@@ -614,8 +616,8 @@ function isEnglishText($text) {
                             @foreach($similarGames->take(4) as $similar)
                                 <a href="{{ route('games.show', $similar) }}" 
                                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700/30 dark:hover:bg-gray-800/30 transition group">
-                                    <img src="{{ $similar->image }}" alt="{{ $similar->title }}" 
-                                         class="w-12 h-12 object-cover rounded" />
+                                    <img src="{{ $similar->optimized_image }}" alt="{{ $similar->title }}" 
+                                         class="w-20 h-[38px] object-cover object-center rounded shrink-0" />
                                     <div class="flex-1 min-w-0">
                                         <h4 class="font-medium text-white group-hover:text-red-400 transition truncate">
                                             {{ $similar->title }}

@@ -36,58 +36,55 @@ class RawgService
     }
 
     /**
-     * Busca a melhor imagem para um jogo (prioriza capa oficial)
+     * Busca a melhor capa no formato loja (prioriza Steam header 460×215).
      */
     public function getBestGameImage(string $title): ?string
     {
         try {
-            // Primeiro busca o jogo
-            $response = Http::timeout(5)->get('https://api.rawg.io/api/games', [
-                'search' => $title,
-                'key' => $this->apiKey,
-                'page_size' => 1
-            ]);
-
-            if (!$response->successful()) {
-                return $this->getFallbackImage($title);
-            }
-
-            $game = $response->json('results')[0] ?? null;
-            if (!$game) {
-                return $this->getFallbackImage($title);
-            }
-
-            // Prioridade 1: background_image (geralmente é a capa oficial)
-            if (!empty($game['background_image']) && $this->isGoodImage($game['background_image'])) {
-                return $game['background_image'];
-            }
-
-            // Prioridade 2: Buscar detalhes do jogo para mais opções
-            $gameId = $game['id'];
-            $detailsResponse = Http::timeout(5)->get("https://api.rawg.io/api/games/{$gameId}", [
-                'key' => $this->apiKey
-            ]);
-
-            if ($detailsResponse->successful()) {
-                $details = $detailsResponse->json();
-                
-                // Tentar background_image dos detalhes
-                if (!empty($details['background_image']) && $this->isGoodImage($details['background_image'])) {
-                    return $details['background_image'];
-                }
-            }
-
-            // Prioridade 3: Usar Steam Store API como alternativa
+            // 1) Steam header — melhor proporção para cards estilo loja
             $steamImage = $this->getSteamImage($title);
             if ($steamImage) {
                 return $steamImage;
             }
 
-            // Fallback final
-            return $this->getFallbackImage($title);
+            // 2) RAWG background
+            $response = Http::timeout(5)->get('https://api.rawg.io/api/games', [
+                'search' => $title,
+                'key' => $this->apiKey,
+                'page_size' => 1,
+            ]);
 
+            if (! $response->successful()) {
+                return $this->getFallbackImage($title);
+            }
+
+            $game = $response->json('results.0');
+            if (! $game) {
+                return $this->getFallbackImage($title);
+            }
+
+            if (! empty($game['background_image']) && $this->isGoodImage($game['background_image'])) {
+                return $game['background_image'];
+            }
+
+            $gameId = $game['id'] ?? null;
+            if ($gameId) {
+                $detailsResponse = Http::timeout(5)->get("https://api.rawg.io/api/games/{$gameId}", [
+                    'key' => $this->apiKey,
+                ]);
+
+                if ($detailsResponse->successful()) {
+                    $details = $detailsResponse->json();
+                    if (! empty($details['background_image']) && $this->isGoodImage($details['background_image'])) {
+                        return $details['background_image'];
+                    }
+                }
+            }
+
+            return $this->getFallbackImage($title);
         } catch (\Exception $e) {
-            Log::warning('Erro ao buscar imagem do jogo: ' . $e->getMessage());
+            Log::warning('Erro ao buscar imagem do jogo: '.$e->getMessage());
+
             return $this->getFallbackImage($title);
         }
     }
@@ -119,28 +116,28 @@ class RawgService
     }
 
     /**
-     * Tenta buscar imagem do Steam
+     * Header oficial Steam (460×215) — mesmo aspect dos cards da loja.
      */
     private function getSteamImage(string $title): ?string
     {
         try {
-            // Steam Store Search API (não oficial, mas funcional)
             $response = Http::timeout(3)->get('https://store.steampowered.com/api/storesearch/', [
                 'term' => $title,
                 'l' => 'english',
-                'cc' => 'US'
+                'cc' => 'US',
             ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                if (!empty($data['items'][0]['tiny_image'])) {
-                    // Converter tiny_image para header_image (capa maior)
-                    $tinyImage = $data['items'][0]['tiny_image'];
-                    return str_replace('_184x69', '_616x353', $tinyImage);
-                }
+            if (! $response->successful()) {
+                return null;
             }
 
-            return null;
+            $item = $response->json('items.0');
+            $appId = $item['id'] ?? null;
+            if (! $appId) {
+                return null;
+            }
+
+            return 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/'.$appId.'/header.jpg';
         } catch (\Exception $e) {
             return null;
         }
@@ -234,8 +231,7 @@ class RawgService
      */
     private function getFallbackImage(string $title): string
     {
-        $encodedTitle = urlencode($title);
-        return "https://via.placeholder.com/460x215/1a1a1a/ffffff?text=" . $encodedTitle;
+        return 'https://via.placeholder.com/460x215/1a1a1a/ffffff?text='.urlencode($title);
     }
 
     /**

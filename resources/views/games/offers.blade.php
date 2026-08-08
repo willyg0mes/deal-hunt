@@ -17,10 +17,10 @@
         {{-- Card principal do jogo --}}
         <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-2xl shadow-lg p-8 mb-8 w-full">
             <div class="flex flex-col lg:flex-row items-center gap-8">
-                <div class="relative flex-shrink-0">
-                    <img src="{{ $game->image }}" alt="{{ $game->title }}" class="w-64 h-64 object-cover rounded-xl shadow-lg" />
+                <div class="relative flex-shrink-0 w-full max-w-md aspect-[460/215] overflow-hidden rounded-xl shadow-lg bg-gray-950">
+                    <img src="{{ $game->optimized_image }}" alt="{{ $game->title }}" class="absolute inset-0 w-full h-full object-cover object-center" />
                     @if($game->discount_percent > 0)
-                    <div class="absolute -top-2 -right-2 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg">
+                    <div class="absolute top-2 right-2 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-lg shadow-lg">
                         -{{ $game->discount_percent }}%
                     </div>
                     @endif
@@ -107,8 +107,8 @@
             @foreach($offers as $offer)
                 <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group w-full">
                     <!-- Imagem com altura fixa -->
-                    <div class="relative h-48 w-full overflow-hidden">
-                        <img src="{{ $offer->image }}" alt="{{ $offer->title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                    <div class="relative aspect-[460/215] w-full overflow-hidden bg-gray-950">
+                        <img src="{{ $offer->optimized_image }}" alt="{{ $offer->title }}" class="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300" />
                         @if($offer->discount_percent > 0)
                         <div class="absolute top-3 left-3">
                             <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow">

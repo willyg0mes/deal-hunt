@@ -61,9 +61,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach($games as $game)
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                        <!-- Imagem do jogo -->
-                        <div class="relative">
-                            <img src="{{ $game->image }}" alt="{{ $game->title }}" class="w-full h-48 object-cover">
+                        <!-- Capa 460×215 -->
+                        <div class="relative aspect-[460/215] overflow-hidden bg-gray-950">
+                            <img src="{{ $game->optimized_image }}" alt="{{ $game->title }}" class="absolute inset-0 w-full h-full object-cover object-center"
+                                 onerror="this.onerror=null; this.src='{{ $game->placeholderCoverUrl() }}';">
                             
                             <!-- Badge de desconto -->
                             @if($game->discount_percent > 0)
