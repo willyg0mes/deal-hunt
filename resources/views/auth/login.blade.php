@@ -1,5 +1,9 @@
 @php
-    $startOnRegister = request()->boolean('register') || ($showRegister ?? false) || $errors->has('name') || $errors->has('password_confirmation');
+    $bag = $errors ?? new \Illuminate\Support\ViewErrorBag();
+    $startOnRegister = request()->boolean('register')
+        || ($showRegister ?? false)
+        || $bag->has('name')
+        || $bag->has('password_confirmation');
     $pageTitle = ($startOnRegister ? 'Criar conta' : 'Entrar').' | '.config('app.name', 'DealHunt');
 @endphp
 
