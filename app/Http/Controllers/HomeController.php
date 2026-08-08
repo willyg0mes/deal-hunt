@@ -24,7 +24,12 @@ class HomeController extends Controller
             ->sort()
             ->values();
 
-        $topGames = Game::valid()->orderByDesc('discount_percent')->take(5)->get();
+        $topGames = Game::valid()
+            ->where('discount_percent', '>', 0)
+            ->orderByDesc('discount_percent')
+            ->orderBy('sale_price')
+            ->take(15)
+            ->get();
         $categories = Category::orderBy('name')->get();
 
         if ($request->ajax()) {
