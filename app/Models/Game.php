@@ -219,6 +219,36 @@ class Game extends Model
     }
 
     /**
+     * Retorna a URL da imagem otimizada para melhor qualidade
+     */
+    public function getOptimizedImageAttribute()
+    {
+        if (empty($this->image)) {
+            return 'https://via.placeholder.com/600x400/1a1a1a/ffffff?text=' . urlencode($this->title);
+        }
+
+        $imageUrl = $this->image;
+
+        // Se for imagem do RAWG, melhorar a resolução
+        if (str_contains($imageUrl, 'media.rawg.io')) {
+            // Remover parâmetros de crop pequenos e usar tamanho maior
+            $imageUrl = preg_replace('/\/crop\/\d+\/\d+\//', '/crop/600/400/', $imageUrl);
+            // Remover scale-to-fit-down para permitir imagens maiores
+            $imageUrl = str_replace('/scale-to-fit-down/', '/scale-to-fit/', $imageUrl);
+            // Garantir que não está usando thumbnail
+            $imageUrl = str_replace('/thumb/', '/', $imageUrl);
+        }
+
+        // Se for imagem do Steam, tentar melhorar
+        if (str_contains($imageUrl, 'steamcdn-a.akamaihd.net') || str_contains($imageUrl, 'steamstatic.com')) {
+            // Remover parâmetros de tamanho se existirem
+            $imageUrl = preg_replace('/\?.*$/', '', $imageUrl);
+        }
+
+        return $imageUrl;
+    }
+
+    /**
      * Gera um link direto para a loja baseado no título e loja
      */
     public function getDirectStoreUrlAttribute()

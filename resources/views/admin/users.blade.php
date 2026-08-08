@@ -82,23 +82,24 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full">
+    <!-- Responsive Table View -->
+    <div class="overflow-x-auto -mx-4 sm:mx-0">
+        <table class="w-full min-w-full">
             <thead class="bg-red-50/50 border-b border-red-200">
                 <tr>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">
+                    <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider whitespace-nowrap">
                         Usuário
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">
+                    <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider hidden sm:table-cell">
                         Contato
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">
+                    <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider hidden md:table-cell whitespace-nowrap">
                         Cadastro
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">
+                    <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider hidden sm:table-cell">
                         Status
                     </th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-red-700 uppercase tracking-wider">
+                    <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wider whitespace-nowrap">
                         Ações
                     </th>
                 </tr>
@@ -106,32 +107,42 @@
             <tbody class="bg-white divide-y divide-gray-100">
                 @forelse($users as $user)
                     <tr class="hover:bg-gray-50 transition-colors table-row-hover">
-                        <td class="px-6 py-4">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3">
                             <div class="flex items-center">
-                                <div class="relative">
-                                    <div class="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-sm">
+                                <div class="relative flex-shrink-0">
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base lg:text-lg shadow-sm">
                                         {{ substr($user->name, 0, 1) }}
                                     </div>
                                     @if($user->is_admin)
-                                        <div class="absolute -top-1 -right-1 w-5 h-5 bg-red-400 rounded-full flex items-center justify-center">
-                                            <svg class="w-3 h-3 text-red-800" fill="currentColor" viewBox="0 0 20 20">
+                                        <div class="absolute -top-1 -right-1 w-4 h-4 lg:w-5 lg:h-5 bg-red-400 rounded-full flex items-center justify-center">
+                                            <svg class="w-2.5 h-2.5 lg:w-3 lg:h-3 text-red-800" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                             </svg>
                                         </div>
                                     @endif
                                 </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-semibold text-gray-900">
+                                <div class="ml-2 sm:ml-3 lg:ml-4 min-w-0">
+                                    <div class="text-xs sm:text-sm font-semibold text-gray-900 truncate">
                                         {{ $user->name }}
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         ID: #{{ $user->id }}
                                     </div>
+                                    <!-- Mobile: Mostrar email no mesmo td -->
+                                    <div class="text-xs text-gray-600 truncate sm:hidden mt-1">
+                                        {{ $user->email }}
+                                    </div>
+                                    <!-- Mobile: Mostrar status no mesmo td -->
+                                    @if($user->is_admin)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 sm:hidden mt-1">
+                                            Admin
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900">{{ $user->email }}</div>
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 hidden sm:table-cell">
+                            <div class="text-xs sm:text-sm text-gray-900 break-words">{{ $user->email }}</div>
                             @if($user->email_verified_at)
                                 <div class="flex items-center mt-1">
                                     <svg class="w-3 h-3 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -148,24 +159,24 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 font-medium">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 hidden md:table-cell">
+                            <div class="text-xs sm:text-sm text-gray-900 font-medium whitespace-nowrap">
                                 {{ $user->created_at->format('d/m/Y') }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 {{ $user->created_at->diffForHumans() }}
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 hidden sm:table-cell">
                             @if($user->is_admin)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 shadow-sm">
+                                <span class="inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 shadow-sm">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                     </svg>
                                     Administrador
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                                <span class="inline-flex items-center px-2 lg:px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                                     </svg>
@@ -173,43 +184,61 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4">
+                            @if($user->is_admin)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 shadow-sm">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    Admin
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Usuário
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-3 sm:px-4 lg:px-6 py-3">
                             @if($user->id !== auth()->id())
                                 <form method="POST" action="{{ route('admin.users.toggle-admin', $user) }}" class="inline">
                                     @csrf
                                     @if($user->is_admin)
                                         <button type="submit" 
-                                                class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all duration-200 shadow-sm hover:shadow"
-                                                onclick="return confirm('Remover privilégios de administrador de {{ $user->name }}?')">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                class="inline-flex items-center px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-semibold rounded-lg text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
+                                                onclick="return confirm('Remover privilégios de administrador de {{ $user->name }}?')"
+                                                title="Remover Admin">
+                                            <svg class="w-3 h-3 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
-                                            Remover Admin
+                                            <span class="hidden sm:inline">Remover Admin</span>
                                         </button>
                                     @else
                                         <button type="submit" 
-                                                class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all duration-200 shadow-sm hover:shadow"
-                                                onclick="return confirm('Promover {{ $user->name }} a administrador?')">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                class="inline-flex items-center px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-semibold rounded-lg text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
+                                                onclick="return confirm('Promover {{ $user->name }} a administrador?')"
+                                                title="Tornar Admin">
+                                            <svg class="w-3 h-3 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                                             </svg>
-                                            Tornar Admin
+                                            <span class="hidden sm:inline">Tornar Admin</span>
                                         </button>
                                     @endif
                                 </form>
                             @else
-                                <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-gray-500 bg-gray-50 border border-gray-200">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <span class="inline-flex items-center px-2 lg:px-3 py-1 lg:py-1.5 text-xs font-medium rounded-lg text-gray-500 bg-gray-50 border border-gray-200">
+                                    <svg class="w-3 h-3 sm:mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                     </svg>
-                                    Você mesmo
+                                    <span class="hidden sm:inline">Você mesmo</span>
                                 </span>
                             @endif
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
+                        <td colspan="5" class="px-3 sm:px-6 py-12 text-center">
                             <div class="flex flex-col items-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a4 4 0 11-8 0 4 4 0 018 0z"/>

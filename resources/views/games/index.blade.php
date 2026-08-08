@@ -11,22 +11,22 @@
         <h1 class="text-3xl font-bold text-white mb-6">Todos os Jogos</h1>
         
         <!-- Filtros -->
-        <form method="GET" action="{{ route('games.index') }}" class="bg-gray-800 rounded-lg p-4 mb-6" id="filters-form">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('games.index') }}" class="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6" id="filters-form">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
                 <!-- Busca -->
-                <div>
-                    <label for="search" class="block text-sm font-medium text-gray-300 mb-1">Buscar Jogo</label>
+                <div class="sm:col-span-2 lg:col-span-1">
+                    <label for="search" class="block text-xs sm:text-sm font-medium text-gray-300 mb-0.5 sm:mb-1">Buscar Jogo</label>
                     <input type="text" id="search" name="search" value="{{ request('search') }}" 
-                           class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                           placeholder="Digite o nome do jogo...">
+                           class="w-full bg-gray-700 border border-gray-600 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                           placeholder="Nome do jogo...">
                 </div>
                 
                 <!-- Categoria -->
                 <div>
-                    <label for="category" class="block text-sm font-medium text-gray-300 mb-1">Categoria</label>
+                    <label for="category" class="block text-xs sm:text-sm font-medium text-gray-300 mb-0.5 sm:mb-1">Categoria</label>
                     <select id="category" name="category" 
-                            class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                        <option value="">Todas as categorias</option>
+                            class="w-full bg-gray-700 border border-gray-600 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="">Todas</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->slug }}" {{ request('category') == $category->slug ? 'selected' : '' }}>
                                 {{ $category->name }}
@@ -37,10 +37,10 @@
                 
                 <!-- Loja -->
                 <div>
-                    <label for="store" class="block text-sm font-medium text-gray-300 mb-1">Loja</label>
+                    <label for="store" class="block text-xs sm:text-sm font-medium text-gray-300 mb-0.5 sm:mb-1">Loja</label>
                     <select id="store" name="store" 
-                            class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                        <option value="">Todas as lojas</option>
+                            class="w-full bg-gray-700 border border-gray-600 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                        <option value="">Todas</option>
                         @foreach($stores as $store)
                             <option value="{{ $store }}" {{ request('store') == $store ? 'selected' : '' }}>
                                 {{ $store }}
@@ -50,9 +50,9 @@
                 </div>
                 
                 <!-- Botões -->
-                <div class="flex items-end gap-2">
+                <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-1">
                     <button type="submit" id="filter-btn"
-                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-md transition">
+                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-md transition text-sm sm:text-base">
                         <span class="filter-text">Filtrar</span>
                         <span class="filter-loading hidden">
                             <svg class="animate-spin h-4 w-4 inline" fill="none" viewBox="0 0 24 24">
@@ -63,7 +63,7 @@
                         </span>
                     </button>
                     <a href="{{ route('games.index') }}" 
-                       class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-md transition text-center">
+                       class="bg-gray-600 hover:bg-gray-700 text-white font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-md transition text-center text-sm sm:text-base">
                         Limpar
                     </a>
                 </div>

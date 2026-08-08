@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Wishlist AJAX script carregado');
+    if (window.LARAVEL_DEBUG) console.log('Wishlist AJAX script carregado');
     
     // ========== WISHLIST AJAX ==========
     
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initWishlistEvents() {
         document.querySelectorAll('.wishlist-form:not([data-ajax-init])').forEach(form => {
             form.setAttribute('data-ajax-init', 'true');
-            console.log('Inicializando wishlist para novo elemento:', form);
+            if (window.LARAVEL_DEBUG) console.log('Inicializando wishlist para novo elemento:', form);
             
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -102,11 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Lidar com filtros AJAX
     const filtersForm = document.getElementById('filters-form');
     if (filtersForm) {
-        console.log('Formulário de filtros encontrado');
+        if (window.LARAVEL_DEBUG) console.log('Formulário de filtros encontrado');
         
         filtersForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Submit de filtros interceptado para AJAX');
+            if (window.LARAVEL_DEBUG) console.log('Submit de filtros interceptado para AJAX');
             
             const formData = new FormData(this);
             const filterBtn = document.getElementById('filter-btn');
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const url = this.action + '?' + params.toString();
-            console.log('Fazendo requisição para:', url);
+            if (window.LARAVEL_DEBUG) console.log('Fazendo requisição para:', url);
             
             fetch(url, {
                 method: 'GET',
@@ -138,11 +138,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .then(response => {
-                console.log('Resposta dos filtros recebida:', response);
+                if (window.LARAVEL_DEBUG) console.log('Resposta dos filtros recebida:', response);
                 return response.text();
             })
             .then(html => {
-                console.log('HTML recebido');
+                if (window.LARAVEL_DEBUG) console.log('HTML recebido');
                 
                 // Criar um documento temporário para extrair apenas a seção de resultados
                 const tempDiv = document.createElement('div');
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     newUrl.search = params.toString();
                     window.history.pushState({}, '', newUrl);
                     
-                    console.log('Filtros aplicados com sucesso!');
+                    if (window.LARAVEL_DEBUG) console.log('Filtros aplicados com sucesso!');
                 } else {
                     console.error('Seção de resultados não encontrada na resposta');
                     // Fallback: recarregar página
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Erro AJAX nos filtros:', error);
                 // Fallback: submeter formulário normalmente
-                console.log('Fallback: submetendo formulário normalmente');
+                if (window.LARAVEL_DEBUG) console.log('Fallback: submetendo formulário normalmente');
                 this.removeEventListener('submit', arguments.callee);
                 this.submit();
             })
@@ -189,14 +189,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (categorySelect) {
             categorySelect.addEventListener('change', function() {
-                console.log('Categoria alterada, submetendo filtros automaticamente');
+                if (window.LARAVEL_DEBUG) console.log('Categoria alterada, submetendo filtros automaticamente');
                 filtersForm.dispatchEvent(new Event('submit'));
             });
         }
         
         if (storeSelect) {
             storeSelect.addEventListener('change', function() {
-                console.log('Loja alterada, submetendo filtros automaticamente');
+                if (window.LARAVEL_DEBUG) console.log('Loja alterada, submetendo filtros automaticamente');
                 filtersForm.dispatchEvent(new Event('submit'));
             });
         }

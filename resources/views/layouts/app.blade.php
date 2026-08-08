@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>window.LARAVEL_DEBUG = @json(config('app.debug'));</script>
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: config('app.name', 'DealHunt');
         $seoDescription = trim($__env->yieldContent('meta_description'))
@@ -199,19 +200,19 @@
 </head>
 
 <body class="font-sans antialiased min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-red-800 dark:from-black dark:via-gray-900 dark:to-black text-white transition-colors duration-300">
-    <div class="min-h-screen flex flex-col overflow-x-hidden">
-        @include('layouts.navigation')
-        
-        <div class="flex flex-1 overflow-hidden">
-            <!-- Menu Lateral Fixo -->
+        <div class="min-h-screen flex flex-col overflow-x-hidden relative">
+            @include('layouts.navigation')
+
+            <div class="flex flex-1 overflow-hidden">
+            <!-- Menu Lateral Desktop - Parte do layout normal -->
             @auth
-            <aside class="w-64 bg-gray-800/50 dark:bg-gray-900/70 backdrop-blur-sm border-r border-gray-700/50 dark:border-gray-600/50 flex-shrink-0 fixed left-0 z-10 overflow-y-auto transition-colors duration-300 sidebar-fixed">
+            <aside class="w-64 bg-gray-800/50 dark:bg-gray-900/70 backdrop-blur-sm border-r border-gray-700/50 dark:border-gray-600/50 flex-shrink-0 hidden lg:block overflow-y-auto">
                 @include('layouts.sidebar')
             </aside>
             @endauth
-            
+
             <!-- Conteúdo Principal -->
-            <main class="flex-1 @auth ml-64 @endauth overflow-x-hidden">
+            <main class="flex-1 overflow-x-hidden @auth xl:ml-0 @endauth"
                 @yield('content')
             </main>
         </div>
@@ -225,7 +226,7 @@
     @auth
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔔 Inicializando sistema de notificações para usuário {{ auth()->id() }}...');
+            if (window.LARAVEL_DEBUG) console.log('🔔 Inicializando sistema de notificações para usuário {{ auth()->id() }}...');
             
             // Sistema de controle de silenciamento
             let isSilenced = false;
@@ -255,7 +256,7 @@
                 localStorage.setItem('notificationSilence', JSON.stringify({ until }));
                 isSilenced = true;
                 silenceUntil = until;
-                console.log(`Notificações silenciadas por ${minutes} minutos`);
+                if (window.LARAVEL_DEBUG) console.log(`Notificações silenciadas por ${minutes} minutos`);
             };
             
             // Criar ou obter o container de toasts
@@ -317,19 +318,19 @@
                     oscillator.start(audioContext.currentTime);
                     oscillator.stop(audioContext.currentTime + 0.2);
                     
-                    console.log('🔊 Som de notificação reproduzido via Web Audio API');
+                    if (window.LARAVEL_DEBUG) console.log('🔊 Som de notificação reproduzido via Web Audio API');
                 } catch (err) {
                     // Fallback para arquivo MP3
                     try {
                         const audio = new Audio('/sounds/notify.mp3');
                         audio.volume = 0.3;
                         audio.play().then(() => {
-                            console.log('🔊 Som de notificação reproduzido via MP3');
+                            if (window.LARAVEL_DEBUG) console.log('🔊 Som de notificação reproduzido via MP3');
                         }).catch(() => {
-                            console.log('⚠️ Não foi possível reproduzir o som');
+                            if (window.LARAVEL_DEBUG) console.log('⚠️ Não foi possível reproduzir o som');
                         });
                     } catch (audioErr) {
-                        console.log('⚠️ Nenhum método de áudio funcionou');
+                        if (window.LARAVEL_DEBUG) console.log('⚠️ Nenhum método de áudio funcionou');
                     }
                 }
             }
@@ -337,13 +338,13 @@
             function showToast(notification) {
                 // Verificar se já foi mostrada nesta sessão
                 if (shownToastIds.has(notification.id)) {
-                    console.log('Notificação já exibida nesta sessão:', notification.id);
+                    if (window.LARAVEL_DEBUG) console.log('Notificação já exibida nesta sessão:', notification.id);
                     return;
                 }
                 
                 // Verificar se está silenciado
                 if (checkSilence()) {
-                    console.log('Notificações silenciadas até:', new Date(silenceUntil));
+                    if (window.LARAVEL_DEBUG) console.log('Notificações silenciadas até:', new Date(silenceUntil));
                     return;
                 }
                 
@@ -449,7 +450,7 @@
                 // Tocar som
                 playNotificationSound();
                 
-                console.log('✅ Nova notificação exibida:', notification.message);
+                if (window.LARAVEL_DEBUG) console.log('✅ Nova notificação exibida:', notification.message);
             }
 
             // Configurar Laravel Echo para notificações em tempo real
@@ -458,37 +459,37 @@
             
             // Tentativa de configurar Echo/WebSocket
             if (window.Echo) {
-                console.log('🔌 Tentando conectar Echo...');
+                if (window.LARAVEL_DEBUG) console.log('🔌 Tentando conectar Echo...');
                 
                 try {
                     const channel = window.Echo.private(`user.{{ auth()->id() }}`);
                     
                     channel.listen('.notification.new', (e) => {
-                        console.log('📨 Nova notificação via WebSocket:', e);
+                        if (window.LARAVEL_DEBUG) console.log('📨 Nova notificação via WebSocket:', e);
                         // O som será tocado automaticamente dentro de showToast()
                         showToast(e);
                         updateNotificationDropdown();
                     });
                     
-                    // Verificar conexão
+                    // Verificar conexão (com checagem segura para evitar erro se Echo/socket não existir)
                     setTimeout(() => {
-                        if (window.Echo.connector && window.Echo.connector.socket.connected) {
+                        if (window.Echo?.connector?.socket?.connected) {
                             isEchoConnected = true;
-                            console.log('✅ Echo conectado com sucesso!');
+                            if (window.LARAVEL_DEBUG) console.log('✅ Echo conectado com sucesso!');
                         } else {
-                            console.log('⚠️ Echo não conectou, usando polling');
+                            if (window.LARAVEL_DEBUG) console.log('⚠️ Echo não conectou, usando polling');
                         }
                     }, 2000);
                     
                 } catch (error) {
-                    console.log('❌ Erro no Echo, usando polling:', error);
+                    if (window.LARAVEL_DEBUG) console.log('❌ Erro no Echo, usando polling:', error);
                 }
             } else {
-                console.log('⚠️ Echo não disponível, usando polling');
+                if (window.LARAVEL_DEBUG) console.log('⚠️ Echo não disponível, usando polling');
             }
             
             // Sistema de polling agressivo como principal método
-            console.log('🔄 Iniciando sistema de polling para notificações...');
+            if (window.LARAVEL_DEBUG) console.log('🔄 Iniciando sistema de polling para notificações...');
             
             let pollingInterval;
             
@@ -516,7 +517,7 @@
                 
                 // Não fazer polling se estiver silenciado
                 if (checkSilence()) {
-                    console.log('🔕 Polling pausado - notificações silenciadas');
+                    if (window.LARAVEL_DEBUG) console.log('🔕 Polling pausado - notificações silenciadas');
                     return;
                 }
                 
@@ -526,7 +527,7 @@
                 }
                 
                 lastNotificationCheck = now;
-                console.log('🔍 Verificando novas notificações...');
+                if (window.LARAVEL_DEBUG) console.log('🔍 Verificando novas notificações...');
                 
                 fetch('/notifications/check-new-web', {
                     method: 'GET',
@@ -540,15 +541,15 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.hasNew && data.notifications) {
-                        console.log('🎉 Novas notificações encontradas:', data.notifications.length);
+                        if (window.LARAVEL_DEBUG) console.log('🎉 Novas notificações encontradas:', data.notifications.length);
                         
                         data.notifications.forEach(notification => {
-                            console.log('📨 Mostrando notificação:', notification);
+                            if (window.LARAVEL_DEBUG) console.log('📨 Mostrando notificação:', notification);
                             // O som será tocado automaticamente dentro de showToast()
                             showToast(notification);
                         });
                     } else if (data.success && !data.hasNew) {
-                        console.log('👍 Nenhuma nova notificação');
+                        if (window.LARAVEL_DEBUG) console.log('👍 Nenhuma nova notificação');
                     }
                 })
                 .catch(error => {
@@ -557,7 +558,7 @@
             }
             
             // Verificação inicial e início do polling
-            console.log('🚀 Iniciando sistema de notificações...');
+            if (window.LARAVEL_DEBUG) console.log('🚀 Iniciando sistema de notificações...');
             checkNotifications();
             startPolling();
             
@@ -567,7 +568,7 @@
                 localStorage.removeItem('notificationSilence');
                 isSilenced = false;
                 silenceUntil = null;
-                console.log('Notificações reativadas');
+                if (window.LARAVEL_DEBUG) console.log('Notificações reativadas');
             };
             window.checkNotifications = checkNotifications;
             window.showToast = showToast; // Tornar showToast globalmente acessível
@@ -583,14 +584,14 @@
             }
             const allToasts = document.querySelectorAll('.notification-toast, .toastify');
             allToasts.forEach(toast => toast.remove());
-            console.log('Todas as notificações foram removidas');
+            if (window.LARAVEL_DEBUG) console.log('Todas as notificações foram removidas');
         };
         
         // Função para resetar o controle de notificações (para debug)
         window.resetNotificationControl = function() {
             const sessionKey = 'shownNotifications_{{ auth()->id() }}';
             sessionStorage.removeItem(sessionKey);
-            console.log('Controle de notificações resetado - notificações poderão aparecer novamente');
+            if (window.LARAVEL_DEBUG) console.log('Controle de notificações resetado - notificações poderão aparecer novamente');
         };
     </script>
     @endauth
