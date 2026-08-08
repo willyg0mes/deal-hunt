@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 class SteamStoreService
 {
     /**
-     * Resolve o AppID Steam a partir da URL da capa ou busca na loja.
+     * Resolve o AppID Steam a partir da capa, busca limpa ou CheapShark.
      */
     public function resolveAppId(Game $game): ?int
     {
@@ -22,37 +22,172 @@ class SteamStoreService
             }
         }
 
-        return $this->searchAppIdByTitle($game->title);
+        foreach ($this->titleSearchVariants($game->title) as $variant) {
+            $appId = $this->searchAppIdByTitle($variant);
+            if ($appId) {
+                return $appId;
+            }
+        }
+
+        return $this->resolveAppIdViaCheapShark($game->title);
+    }
+
+    /**
+     * Variantes do título para achar a página base na Steam
+     * (remove Deluxe/Gold/Ultimate Edition etc.).
+     *
+     * @return list<string>
+     */
+    public function titleSearchVariants(string $title): array
+    {
+        $title = trim(html_entity_decode($title));
+        $variants = [$title];
+
+        $cleaned = preg_replace(
+            '/\s*[-–—:|]\s*(Deluxe|Gold|Ultimate|Complete|Definitive|Special|Elite|Premium|Standard|GOTY|Game of the Year|Anniversary|Enhanced|Remastered|Collector.?s|Digital|Super|Legendary|Edition).*$/iu',
+            '',
+            $title
+        ) ?? $title;
+        $cleaned = preg_replace(
+            '/\s+(Deluxe|Gold|Ultimate|Complete|Definitive|Special|Elite|Premium|GOTY|Edition)\b.*$/iu',
+            '',
+            $cleaned
+        ) ?? $cleaned;
+        $cleaned = trim($cleaned, " \t\n\r\0\x0B-–—:");
+
+        if ($cleaned !== '' && strcasecmp($cleaned, $title) !== 0) {
+            $variants[] = $cleaned;
+        }
+
+        // Aspas comuns em brands Ubisoft etc.
+        $withApostrophe = preg_replace("/\bAssassins\b/i", "Assassin's", $cleaned ?: $title) ?? $title;
+        $withApostrophe = preg_replace("/\bTom Clancys\b/i", "Tom Clancy's", $withApostrophe) ?? $withApostrophe;
+        $withApostrophe = preg_replace("/\bWatch Dogs\b/i", 'Watch Dogs', $withApostrophe) ?? $withApostrophe;
+        if (! in_array($withApostrophe, $variants, true)) {
+            $variants[] = $withApostrophe;
+        }
+
+        // Sem subtítulo após ":"
+        if (str_contains($cleaned ?: $title, ':')) {
+            $beforeColon = trim(explode(':', $cleaned ?: $title, 2)[0]);
+            if (mb_strlen($beforeColon) >= 4) {
+                $variants[] = $beforeColon;
+            }
+        }
+
+        return array_values(array_unique(array_filter($variants)));
     }
 
     public function searchAppIdByTitle(string $title): ?int
     {
-        $cacheKey = 'steam:appid:'.Str::slug(mb_strtolower(trim($title)));
+        $cacheKey = 'steam:appid:v2:'.Str::slug(mb_strtolower(trim($title)));
 
-        return Cache::remember($cacheKey, now()->addDays(7), function () use ($title) {
+        return Cache::remember($cacheKey, now()->addDays(3), function () use ($title) {
             try {
-                $response = Http::timeout(6)
+                $response = Http::timeout(8)
                     ->withHeaders(['User-Agent' => CheapShark::userAgent()])
                     ->get('https://store.steampowered.com/api/storesearch/', [
                         'term' => $title,
-                        'l' => 'portuguese',
-                        'cc' => 'BR',
+                        'l' => 'english',
+                        'cc' => 'US',
                     ]);
 
                 if (! $response->successful()) {
                     return null;
                 }
 
-                $item = $response->json('items.0');
-                $id = $item['id'] ?? null;
+                $items = $response->json('items') ?? [];
+                if ($items === []) {
+                    return null;
+                }
 
-                return $id ? (int) $id : null;
+                // Preferir match mais próximo do termo buscado
+                $best = $this->pickBestSearchMatch($title, $items);
+
+                return $best ? (int) $best['id'] : null;
             } catch (\Throwable $e) {
                 Log::warning('SteamStoreService searchAppId: '.$e->getMessage());
 
                 return null;
             }
         });
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $items
+     * @return array<string, mixed>|null
+     */
+    protected function pickBestSearchMatch(string $title, array $items): ?array
+    {
+        $needle = Str::lower(preg_replace('/[^a-z0-9]+/i', ' ', $title) ?? $title);
+        $needle = trim(preg_replace('/\s+/', ' ', $needle) ?? $needle);
+
+        $best = null;
+        $bestScore = -1;
+
+        foreach ($items as $item) {
+            $name = (string) ($item['name'] ?? '');
+            $hay = Str::lower(preg_replace('/[^a-z0-9]+/i', ' ', $name) ?? $name);
+            $hay = trim(preg_replace('/\s+/', ' ', $hay) ?? $hay);
+
+            similar_text($needle, $hay, $percent);
+            $score = (float) $percent;
+
+            if (str_starts_with($hay, $needle) || str_starts_with($needle, $hay)) {
+                $score += 15;
+            }
+            if ($hay === $needle) {
+                $score += 40;
+            }
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $item;
+            }
+        }
+
+        // Evitar match péssimo (ex.: título totalmente diferente)
+        if ($bestScore < 35) {
+            return $items[0] ?? null;
+        }
+
+        return $best;
+    }
+
+    public function resolveAppIdViaCheapShark(string $title): ?int
+    {
+        foreach ($this->titleSearchVariants($title) as $variant) {
+            $cacheKey = 'cheapshark:steamapp:'.Str::slug(mb_strtolower($variant));
+
+            $appId = Cache::remember($cacheKey, now()->addDays(3), function () use ($variant) {
+                try {
+                    $response = CheapShark::http(10)->get('https://www.cheapshark.com/api/1.0/games', [
+                        'title' => $variant,
+                        'limit' => 8,
+                    ]);
+
+                    if (! $response->successful()) {
+                        return null;
+                    }
+
+                    foreach ($response->json() ?? [] as $row) {
+                        if (! empty($row['steamAppID'])) {
+                            return (int) $row['steamAppID'];
+                        }
+                    }
+
+                    return null;
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            });
+
+            if ($appId) {
+                return (int) $appId;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -78,9 +213,26 @@ class SteamStoreService
     /**
      * @return array<string, mixed>|null
      */
-    public function getAppDetails(int $appId, string $lang = 'brazilian'): ?array
+    public function getAppDetails(int $appId, ?string $lang = null): ?array
     {
-        $cacheKey = "steam:appdetails:{$appId}:{$lang}";
+        $langs = $lang ? [$lang] : ['brazilian', 'english'];
+
+        foreach ($langs as $tryLang) {
+            $data = $this->fetchAppDetailsForLang($appId, $tryLang);
+            if ($data) {
+                return $data;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function fetchAppDetailsForLang(int $appId, string $lang): ?array
+    {
+        $cacheKey = "steam:appdetails:v2:{$appId}:{$lang}";
         $cached = Cache::get($cacheKey);
 
         if ($cached === false) {
@@ -97,18 +249,18 @@ class SteamStoreService
                 ->get('https://store.steampowered.com/api/appdetails', [
                     'appids' => $appId,
                     'l' => $lang,
-                    'cc' => 'BR',
+                    'cc' => $lang === 'brazilian' ? 'BR' : 'US',
                 ]);
 
             if (! $response->successful()) {
-                Cache::put($cacheKey, false, now()->addMinutes(30));
+                Cache::put($cacheKey, false, now()->addMinutes(20));
 
                 return null;
             }
 
             $payload = $response->json((string) $appId);
             if (! ($payload['success'] ?? false) || empty($payload['data'])) {
-                Cache::put($cacheKey, false, now()->addHours(6));
+                Cache::put($cacheKey, false, now()->addHours(2));
 
                 return null;
             }
@@ -119,7 +271,7 @@ class SteamStoreService
             return $data;
         } catch (\Throwable $e) {
             Log::warning('SteamStoreService getAppDetails: '.$e->getMessage());
-            Cache::put($cacheKey, false, now()->addMinutes(20));
+            Cache::put($cacheKey, false, now()->addMinutes(15));
 
             return null;
         }
@@ -145,7 +297,6 @@ class SteamStoreService
             $webm = $movie['webm']['max'] ?? $movie['webm']['480'] ?? null;
             $movieId = $movie['id'] ?? null;
 
-            // API nova (só HLS/DASH): reconstrói MP4/WebM clássicos do CDN
             if ((! $mp4 || ! $webm) && $movieId) {
                 $mp4 = $mp4 ?: "https://cdn.cloudflare.steamstatic.com/steam/apps/{$movieId}/movie_max.mp4";
                 $webm = $webm ?: "https://cdn.cloudflare.steamstatic.com/steam/apps/{$movieId}/movie_max.webm";

@@ -462,8 +462,8 @@ function isEnglishText($text) {
                         </div>
                     @else
                         <div class="bg-gray-700/30 rounded-lg p-6 text-center">
-                            <p class="text-gray-400 dark:text-gray-500 mb-2">Descrição ainda não disponível para este jogo.</p>
-                            <p class="text-gray-500 dark:text-gray-600 text-sm">Pode ser um título sem página Steam correspondente.</p>
+                            <p class="text-gray-400 dark:text-gray-500 mb-2">Ainda não encontramos a ficha deste título nas lojas.</p>
+                            <p class="text-gray-500 dark:text-gray-600 text-sm">Edições especiais ou bundles às vezes não têm página própria — tente o jogo base se disponível.</p>
                         </div>
                     @endif
                     

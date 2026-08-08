@@ -130,6 +130,20 @@ class GameController extends Controller
             $game->save();
         }
 
+        // Se a capa for placeholder / sem Steam, promove header oficial quando achar AppID
+        if (! empty($catalog['background_image']) && ! empty($catalog['steam_app_id'])) {
+            $img = (string) $game->image;
+            $needsCover = $img === ''
+                || str_contains($img, 'placeholder')
+                || str_contains($img, 'placehold.co')
+                || ! preg_match('#/(?:steam/)?apps/\d+/#i', $img);
+
+            if ($needsCover) {
+                $game->image = Game::steamHeaderUrl((int) $catalog['steam_app_id']);
+                $game->save();
+            }
+        }
+
         // Associa gêneros do catálogo às categorias locais quando o jogo ainda não tem
         if ($game->categories->isEmpty() && ! empty($catalog['genres'])) {
             $ids = [];
