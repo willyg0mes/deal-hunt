@@ -38,7 +38,7 @@ REDIS_PORT_EXTERNAL=6380
 # ================================
 # CACHE & SESSIONS
 # ================================
-CACHE_DRIVER=redis
+CACHE_STORE=redis
 SESSION_DRIVER=redis
 SESSION_LIFETIME=120
 QUEUE_CONNECTION=redis
@@ -48,6 +48,7 @@ QUEUE_CONNECTION=redis
 # ================================
 # Obtenha em: https://pusher.com
 BROADCAST_DRIVER=pusher
+BROADCAST_CONNECTION=pusher
 PUSHER_APP_ID=seu_app_id
 PUSHER_APP_KEY=sua_app_key
 PUSHER_APP_SECRET=seu_app_secret
@@ -59,9 +60,6 @@ PUSHER_APP_CLUSTER=mt1
 # RAWG API - https://rawg.io/apidocs
 RAWG_API_KEY=sua_rawg_api_key
 
-# Google Translate API (opcional)
-GOOGLE_TRANSLATE_API_KEY=sua_google_translate_key
-
 # ================================
 # MAIL CONFIGURATION
 # ================================
@@ -70,9 +68,15 @@ MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=2525
 MAIL_USERNAME=seu_username
 MAIL_PASSWORD=sua_senha
-MAIL_ENCRYPTION=tls
+MAIL_SCHEME=null
 MAIL_FROM_ADDRESS=noreply@dealhunt.com
 MAIL_FROM_NAME="${APP_NAME}"
+
+# Locales / moeda
+APP_LOCALE=pt-BR
+APP_FALLBACK_LOCALE=pt-BR
+APP_DEFAULT_CURRENCY=BRL
+APP_DEFAULT_LOCALE=pt-BR
 
 # ================================
 # PHPMYADMIN (Desenvolvimento)
