@@ -39,22 +39,19 @@ class GameController extends Controller
 
     public function show(Game $game)
     {
-        $game->load('categories');
-        
-        // Buscar dados adicionais do RAWG API
+        $game->load(['categories', 'translations']);
+
         $rawgService = app(\App\Services\RawgService::class);
         $rawgData = $rawgService->getGameDetails($game->title);
-        
-        // Buscar ofertas relacionadas (mesmo jogo em outras lojas)
-        $relatedOffers = Game::valid()
+
+        $relatedOffers = Game::with(['categories', 'translations'])->valid()
             ->where('title', 'LIKE', '%' . $game->title . '%')
             ->where('id', '!=', $game->id)
             ->orderBy('sale_price')
             ->take(5)
             ->get();
-        
-        // Jogos similares (mesma categoria ou desenvolvedor)
-        $similarGames = Game::valid()
+
+        $similarGames = Game::with(['categories', 'translations'])->valid()
             ->where('id', '!=', $game->id)
             ->where(function($query) use ($game) {
                 if ($game->developer) {
@@ -69,7 +66,7 @@ class GameController extends Controller
             ->orderByDesc('metacritic')
             ->take(6)
             ->get();
-        
+
         return view('games.show', compact('game', 'rawgData', 'relatedOffers', 'similarGames'));
     }
 

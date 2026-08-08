@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+@section('title', 'Entrar | '.config('app.name', 'DealHunt'))
+@section('meta_robots', 'noindex,nofollow')
+
 @section('content')
 <div x-data="{ showLogin: {{ request('register') ? 'false' : 'true' }}, show2FA: {{ session('login.id') ? 'true' : 'false' }} }"
      x-init="window.addEventListener('show-register', () => showLogin = false)"

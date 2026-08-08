@@ -15,7 +15,17 @@ use App\Http\Middleware\CheckTrustedDevice;
 
 Route::middleware(['web'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    
+    Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, '__invoke'])->name('sitemap');
+    Route::get('/robots.txt', function () {
+        $sitemap = rtrim((string) config('app.url'), '/').'/sitemap.xml';
+
+        return response(
+            "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /dashboard\nDisallow: /profile\nDisallow: /wishlist\nDisallow: /notificacoes\nDisallow: /notifications\nDisallow: /login\nDisallow: /register\nDisallow: /two-factor-challenge\nDisallow: /email/\n\nSitemap: {$sitemap}\n",
+            200,
+            ['Content-Type' => 'text/plain; charset=UTF-8']
+        );
+    })->name('robots');
+
     // Rotas públicas - não requerem autenticação (rotas específicas antes de /games/{game})
     Route::get('/games', [GameController::class, 'index'])->name('games.index');
     Route::get('/games/free', [GameController::class, 'free'])->name('games.free');

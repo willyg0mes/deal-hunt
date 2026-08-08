@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'DealHunt — ofertas de jogos em tempo real')
+@section('meta_description', 'Encontre as melhores ofertas de games na Steam, Epic e outras lojas. Wishlist, alertas e descontos atualizados no DealHunt.')
+@section('canonical', route('home'))
+
 @section('content')
 <div class="w-full h-full">
     <div class="p-6 max-w-none">

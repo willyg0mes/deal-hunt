@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+@section('title', 'Perfil | '.config('app.name', 'DealHunt'))
+@section('meta_robots', 'noindex,nofollow')
+
 @section('content')
 <div class="py-8 min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-red-800 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
     <div class="max-w-3xl mx-auto px-4 space-y-6">

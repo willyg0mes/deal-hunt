@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Jogos grátis agora | '.config('app.name', 'DealHunt'))
+@section('meta_description', 'Lista de jogos gratuitos e free-to-play atualizada. Pegue grátis no DealHunt.')
+@section('canonical', route('games.free'))
+
 @section('content')
 <div class="px-6 py-8">
     <!-- Cabeçalho -->

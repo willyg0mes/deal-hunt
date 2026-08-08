@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
+@section('title', $game->title.($game->discount_percent ? ' — '.$game->discount_percent.'% off' : '').' | '.config('app.name', 'DealHunt'))
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($game->getBestDescription($rawgData) ?: ($game->title.' com desconto na '.($game->store_name ?: 'loja digital').'. Confira no DealHunt.')), 160))
+@section('canonical', route('games.show', $game))
+@section('og_type', 'product')
+@section('og_image', $game->image ?: (($rawgData['background_image'] ?? null) ?: asset('favicon.ico')))
+
 @section('content')
 @php
 // Função para traduzir classificações ESRB

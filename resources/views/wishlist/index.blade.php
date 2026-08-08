@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+@section('title', 'Wishlist | '.config('app.name', 'DealHunt'))
+@section('meta_robots', 'noindex,nofollow')
+
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
     <div class="container mx-auto px-4 py-8">

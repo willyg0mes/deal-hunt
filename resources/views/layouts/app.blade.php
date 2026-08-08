@@ -5,7 +5,29 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'DealHunt - Gaming Deals') }}</title>
+    @php
+        $seoTitle = trim($__env->yieldContent('title')) ?: config('app.name', 'DealHunt');
+        $seoDescription = trim($__env->yieldContent('meta_description'))
+            ?: 'Ofertas de jogos em tempo real — Steam, Epic e mais lojas. Wishlist e alertas no DealHunt.';
+        $seoCanonical = trim($__env->yieldContent('canonical')) ?: url()->current();
+        $seoImage = trim($__env->yieldContent('og_image')) ?: asset('favicon.ico');
+        $seoRobots = trim($__env->yieldContent('meta_robots')) ?: 'index,follow';
+    @endphp
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags($seoDescription), 160) }}">
+    <meta name="robots" content="{{ $seoRobots }}">
+    <link rel="canonical" href="{{ $seoCanonical }}">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:site_name" content="{{ config('app.name', 'DealHunt') }}">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ \Illuminate\Support\Str::limit(strip_tags($seoDescription), 160) }}">
+    <meta property="og:url" content="{{ $seoCanonical }}">
+    <meta property="og:image" content="{{ $seoImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ \Illuminate\Support\Str::limit(strip_tags($seoDescription), 160) }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

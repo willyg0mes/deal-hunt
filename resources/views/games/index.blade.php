@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Ofertas de jogos | '.config('app.name', 'DealHunt'))
+@section('meta_description', 'Catálogo de ofertas de games com filtros por loja, categoria e desconto. Atualizado em tempo real no DealHunt.')
+@section('canonical', route('games.index'))
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-8">
     <!-- Header com filtros -->

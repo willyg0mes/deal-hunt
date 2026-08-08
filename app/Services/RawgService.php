@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RawgService
 {
@@ -145,76 +147,84 @@ class RawgService
     }
 
     /**
-     * Busca detalhes completos de um jogo
+     * Busca detalhes completos de um jogo (cache 12h; falhas 15min).
      */
     public function getGameDetails(string $title): ?array
     {
+        $cacheKey = 'rawg:game-details:'.Str::slug(mb_strtolower(trim($title)));
+        $cached = Cache::get($cacheKey);
+
+        if ($cached === false) {
+            return null;
+        }
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $details = $this->fetchGameDetails($title);
+        Cache::put(
+            $cacheKey,
+            $details ?? false,
+            $details ? now()->addHours(12) : now()->addMinutes(15)
+        );
+
+        return $details;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function fetchGameDetails(string $title): ?array
+    {
         try {
-            Log::info("RawgService: Buscando detalhes para: {$title}");
-            
-            // Primeiro busca o jogo
             $response = Http::timeout(3)->get('https://api.rawg.io/api/games', [
                 'search' => $title,
                 'key' => $this->apiKey,
-                'page_size' => 1
+                'page_size' => 1,
             ]);
 
-            if (!$response->successful()) {
-                Log::warning("RawgService: Erro na busca inicial - Status: " . $response->status());
+            if (! $response->successful()) {
+                Log::warning('RawgService: Erro na busca inicial - Status: '.$response->status());
+
                 return null;
             }
 
-            $searchResults = $response->json();
-            $game = $searchResults['results'][0] ?? null;
-            
-            if (!$game) {
-                Log::warning("RawgService: Nenhum resultado encontrado para: {$title}");
+            $game = $response->json('results.0');
+            if (! $game) {
                 return null;
             }
 
-            Log::info("RawgService: Jogo encontrado - ID: {$game['id']}, Nome: {$game['name']}");
-
-            // Buscar detalhes completos
             $gameId = $game['id'];
             $detailsResponse = Http::timeout(3)->get("https://api.rawg.io/api/games/{$gameId}", [
-                'key' => $this->apiKey
+                'key' => $this->apiKey,
             ]);
 
-            if ($detailsResponse->successful()) {
-                $details = $detailsResponse->json();
-                
-                // Log das descrições disponíveis
-                if (isset($details['description_raw'])) {
-                    Log::info("RawgService: Encontrada description_raw - " . strlen($details['description_raw']) . " caracteres");
-                }
-                if (isset($details['description'])) {
-                    Log::info("RawgService: Encontrada description HTML - " . strlen($details['description']) . " caracteres");
-                }
-                
-                // Se não há description_raw, tentar extrair do HTML
-                if (empty($details['description_raw']) && !empty($details['description'])) {
-                    $details['description_raw'] = strip_tags($details['description']);
-                    Log::info("RawgService: Extraída description_raw do HTML");
-                }
-                
-                // Buscar screenshots
-                $screenshotsResponse = Http::timeout(5)->get("https://api.rawg.io/api/games/{$gameId}/screenshots", [
-                    'key' => $this->apiKey,
-                    'page_size' => 6
-                ]);
-                
-                if ($screenshotsResponse->successful()) {
-                    $details['screenshots'] = $screenshotsResponse->json('results') ?? [];
-                }
+            if (! $detailsResponse->successful()) {
+                Log::warning('RawgService: Erro ao buscar detalhes - Status: '.$detailsResponse->status());
 
-                return $details;
-            } else {
-                Log::warning("RawgService: Erro ao buscar detalhes - Status: " . $detailsResponse->status());
+                return null;
             }
 
-            return null;
+            $details = $detailsResponse->json();
+
+            if (empty($details['description_raw']) && ! empty($details['description'])) {
+                $details['description_raw'] = strip_tags($details['description']);
+            }
+
+            $screenshotsResponse = Http::timeout(5)->get("https://api.rawg.io/api/games/{$gameId}/screenshots", [
+                'key' => $this->apiKey,
+                'page_size' => 6,
+            ]);
+
+            if ($screenshotsResponse->successful()) {
+                $details['screenshots'] = $screenshotsResponse->json('results') ?? [];
+            }
+
+            return $details;
         } catch (\Exception $e) {
-            Log::error('RawgService: Erro ao buscar detalhes do jogo: ' . $e->getMessage());
+            Log::error('RawgService: Erro ao buscar detalhes do jogo: '.$e->getMessage());
+
             return null;
         }
     }

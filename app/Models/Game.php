@@ -62,6 +62,10 @@ class Game extends Model
     // Método helper para obter tradução de um campo específico
     public function getTranslation($fieldName)
     {
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('field_name', $fieldName);
+        }
+
         return $this->translations()->where('field_name', $fieldName)->first();
     }
 
