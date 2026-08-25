@@ -63,31 +63,55 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Processa o código do 2FA.
+     * Processa o código do 2FA (TOTP ou recovery).
      */
     public function twoFactor(Request $request)
     {
+        $request->validate([
+            'id' => ['required'],
+            'code' => ['required', 'string'],
+        ]);
+
         $userId = $request->input('id');
         $user = User::query()->find($userId);
 
         if ($user === null || blank($user->two_factor_secret)) {
-            return back()->withErrors(['code' => 'Sessão 2FA inválida.']);
+            return back()->withErrors(['code' => 'Sessão 2FA inválida. Faça login novamente.']);
         }
 
-        $google2fa = new Google2FA;
-        $valid = $google2fa->verifyKey(
-            decrypt($user->two_factor_secret),
-            (string) $request->input('code')
-        );
+        $code = preg_replace('/\s+/', '', (string) $request->input('code'));
+        $valid = false;
+
+        try {
+            $google2fa = new Google2FA;
+            $valid = $google2fa->verifyKey(
+                decrypt($user->two_factor_secret),
+                $code
+            );
+        } catch (\Throwable $e) {
+            Log::warning('2FA verify failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+        }
+
+        if (! $valid && method_exists($user, 'recoveryCodes')) {
+            $recoveryCodes = $user->recoveryCodes();
+            foreach ($recoveryCodes as $recoveryCode) {
+                if (hash_equals((string) $recoveryCode, $code)) {
+                    $user->replaceRecoveryCode($recoveryCode);
+                    $valid = true;
+                    break;
+                }
+            }
+        }
 
         if (! $valid) {
             return back()->withErrors(['code' => 'Código 2FA inválido.']);
         }
 
-        Auth::login($user);
+        Auth::login($user, $request->boolean('remember'));
         $request->session()->forget('login.id');
+        $request->session()->regenerate();
 
-        if ($request->filled('remember')) {
+        if ($request->filled('remember') || $request->boolean('remember_device')) {
             $deviceId = $request->cookie('trusted_device');
 
             $trusted = $deviceId

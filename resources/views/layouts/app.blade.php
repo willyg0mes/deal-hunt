@@ -662,5 +662,6 @@
     
     {{-- Wishlist AJAX --}}
     <script src="{{ asset('js/wishlist-ajax.js') }}"></script>
+    <script src="{{ asset('js/pwa-install.js') }}" defer></script>
 </body>
 </html>

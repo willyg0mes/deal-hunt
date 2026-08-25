@@ -155,13 +155,14 @@
             </div>
             <h2 class="text-xl font-bold text-red-400 mb-2 text-center">Autenticação em duas etapas</h2>
             <p class="text-sm text-slate-400 text-center mb-5">Digite o código do seu aplicativo autenticador.</p>
-            <form method="POST" action="{{ route('two-factor.login') }}" class="space-y-4">
+            <form method="POST" action="{{ route('two-factor.login.store') }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="id" value="{{ session('login.id') }}">
                 <div>
                     <x-input-label for="code" value="Código 2FA" class="text-slate-300" />
-                    <x-text-input id="code" class="auth-input block mt-1.5 w-full rounded-xl tracking-[0.3em] text-center text-lg" type="text" name="code" required autofocus inputmode="numeric" autocomplete="one-time-code" />
+                    <x-text-input id="code" class="auth-input block mt-1.5 w-full rounded-xl tracking-[0.3em] text-center text-lg" type="text" name="code" required autofocus inputmode="numeric" autocomplete="one-time-code" placeholder="000000" />
                     <x-input-error :messages="$errors->get('code')" class="mt-2 text-red-400" />
+                    <p class="mt-2 text-xs text-slate-500 text-center">Também aceita um código de recuperação.</p>
                 </div>
                 <label class="inline-flex items-center text-sm text-slate-300">
                     <input type="checkbox" name="remember" value="1" class="rounded bg-slate-900 border-red-800 text-red-600 focus:ring-red-500">

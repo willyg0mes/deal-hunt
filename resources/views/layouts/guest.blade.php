@@ -77,5 +77,6 @@
             <a href="{{ route('home') }}" class="hover:text-slate-300 underline underline-offset-2">Voltar às ofertas</a>
         </p>
     </div>
+    <script src="{{ asset('js/pwa-install.js') }}" defer></script>
 </body>
 </html>
