@@ -1,0 +1,23 @@
+{
+  "name": "DealHunt",
+  "short_name": "DealHunt",
+  "description": "Ofertas de jogos em tempo real — Steam, Epic e mais lojas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#b91c1c",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/images/brand/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

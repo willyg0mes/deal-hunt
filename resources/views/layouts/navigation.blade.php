@@ -28,12 +28,17 @@ return $date->format('d/m/Y');
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
             <div class="shrink-0 flex items-center">
-                <a href="{{ route('home') }}">
-                    <!-- SVG temporário como logo -->
-                    <svg class="h-9 w-auto" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="20" cy="20" r="18" fill="#DC2626" stroke="#fff" stroke-width="2"/>
-                        <text x="50%" y="55%" text-anchor="middle" fill="#fff" font-size="16" font-family="Arial" dy=".3em">DH</text>
-                    </svg>
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5 group" aria-label="DealHunt — início">
+                    <img
+                        src="{{ asset('images/brand/icon.png') }}"
+                        alt=""
+                        width="36"
+                        height="36"
+                        class="h-9 w-9 rounded-lg object-cover ring-1 ring-white/20 shadow-md shadow-black/30 group-hover:ring-red-300/50 transition"
+                    />
+                    <span class="hidden sm:inline text-lg font-extrabold tracking-wide text-white">
+                        Deal<span class="text-red-300">Hunt</span>
+                    </span>
                 </a>
             </div>
 

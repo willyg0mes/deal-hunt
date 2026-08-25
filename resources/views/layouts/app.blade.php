@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>window.LARAVEL_DEBUG = @json(config('app.debug'));</script>
     @php
@@ -11,13 +11,14 @@
         $seoDescription = trim($__env->yieldContent('meta_description'))
             ?: 'Ofertas de jogos em tempo real — Steam, Epic e mais lojas. Wishlist e alertas no DealHunt.';
         $seoCanonical = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $seoImage = trim($__env->yieldContent('og_image')) ?: asset('favicon.ico');
+        $seoImage = trim($__env->yieldContent('og_image')) ?: asset('images/brand/og.png');
         $seoRobots = trim($__env->yieldContent('meta_robots')) ?: 'index,follow';
     @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ \Illuminate\Support\Str::limit(strip_tags($seoDescription), 160) }}">
     <meta name="robots" content="{{ $seoRobots }}">
     <link rel="canonical" href="{{ $seoCanonical }}">
+    @include('partials.brand-head')
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:site_name" content="{{ config('app.name', 'DealHunt') }}">
     <meta property="og:locale" content="pt_BR">
@@ -32,7 +33,8 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <!-- Toastify CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
