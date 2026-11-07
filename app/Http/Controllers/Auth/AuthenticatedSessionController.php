@@ -68,11 +68,15 @@ class AuthenticatedSessionController extends Controller
     public function twoFactor(Request $request)
     {
         $request->validate([
-            'id' => ['required'],
             'code' => ['required', 'string'],
         ]);
 
-        $userId = $request->input('id');
+        // Bind challenge to Fortify session login.id — never trust body id.
+        $userId = $request->session()->get('login.id');
+        if ($userId === null || $userId === '') {
+            return back()->withErrors(['code' => 'Sessão 2FA inválida. Faça login novamente.']);
+        }
+
         $user = User::query()->find($userId);
 
         if ($user === null || blank($user->two_factor_secret)) {
